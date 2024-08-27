@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 const ScrollProgressBar = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
+    const { theme } = useTheme();
 
     useEffect(() => {
         const updateScrollProgress = () => {
@@ -21,9 +23,9 @@ const ScrollProgressBar = () => {
     }, []);
 
     return (
-        <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
+        <div className="fixed top-0 left-0 w-full h-1 bg-transparent z-50">
             <div 
-                className="h-full bg-blue-500"
+                className={`h-full transition-all duration-300 ${theme === 'dark' ? 'bg-white' : 'bg-black'}`}
                 style={{ width: `${scrollProgress}%` }}
             />
         </div>

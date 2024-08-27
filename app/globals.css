@@ -1,3 +1,7 @@
+/* Prism.js의 테마를 임포트합니다. */
+@import 'prismjs/themes/prism-tomorrow.css';
+
+/* Pretendard 폰트를 임포트합니다. */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
 @tailwind base;
@@ -86,6 +90,7 @@
     --chart-5: 340 75% 55%;
   }
 }
+
 .prose h1 {
   font-size: 2.2em;
 }

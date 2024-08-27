@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/ghost';
@@ -13,6 +13,7 @@ import readingTime from 'reading-time';
 import parse from 'html-react-parser';
 import Notice from '../components/Notice';
 import ScrollProgressBar from '../components/ScrollProgressBar';
+import CodeBlock from '../components/CodeBlock'; // CodeBlock 컴포넌트 임포트
 
 export default function Post() {
     const [post, setPost] = useState<PostOrPage | null>(null);
@@ -64,11 +65,10 @@ export default function Post() {
                     const match = /language-(\w+)/.exec(className || '');
                     if (match) {
                         return (
-                            <pre className={`language-${match[1]}`}>
-                                <code className={`language-${match[1]}`}>
-                                    {domNode.children[0].children[0].data}
-                                </code>
-                            </pre>
+                            <CodeBlock
+                                language={match[1]}
+                                code={domNode.children[0].children[0].data} // code 속성 사용
+                            />
                         );
                     }
                 }
