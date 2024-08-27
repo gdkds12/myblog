@@ -83,14 +83,17 @@ export default function Post() {
             <div className="fixed top-4 right-4 z-50">
                 <DarkModeToggle />
             </div>
-            <main className="flex-grow w-full px-4 my-8 mx-auto max-w-full md:max-w-[90%] lg:max-w-[1200px] xl:max-w-[1400px]">
+            <main className="flex-grow mx-auto px-4 sm:px-6 lg:px-8 xl:px-16 max-w-full lg:max-w-[1300px] xl:max-w-[1600px]">
                 {!post ? (
                     <div>Loading...</div>
                 ) : (
-                    <div className="flex flex-col lg:flex-row justify-between">
-                        <Card className="w-full lg:w-[70%] ml-[5%] bg-transparent border-none shadow-none">
+                    <div className="flex flex-col lg:flex-row lg:gap-8">
+                        <Card className="w-full lg:w-[70%] bg-transparent border-none shadow-none">
                             <CardHeader>
-                                <button onClick={() => router.push('/')} className="flex items-center text-sm mb-4 hover:underline">
+                                <button
+                                    onClick={() => router.push('/')}
+                                    className="flex items-center text-sm mb-4 hover:underline"
+                                >
                                     <ArrowLeft className="mr-2 h-4 w-4" />
                                     블로그로 돌아가기
                                 </button>
@@ -100,14 +103,19 @@ export default function Post() {
                                     {readingTime(post.html || '').text}
                                 </div>
                                 <div className="flex flex-wrap gap-2 mb-4">
-                                    {post?.tags && post.tags.map((tag) => (
-                                        <span key={tag.id} className="px-3 py-1 text-sm border rounded-full">
-                                            {tag.name || ''}
-                                        </span>
-                                    ))}
+                                    {post?.tags &&
+                                        post.tags.map((tag) => (
+                                            <span key={tag.id} className="px-3 py-1 text-sm border rounded-full">
+                                                {tag.name || ''}
+                                            </span>
+                                        ))}
                                 </div>
                                 {post.feature_image && (
-                                    <img src={post.feature_image} alt={post.title} className="w-full h-auto object-cover rounded-lg mt-4" />
+                                    <img
+                                        src={post.feature_image}
+                                        alt={post.title}
+                                        className="w-full h-auto object-cover rounded-lg mt-4"
+                                    />
                                 )}
                             </CardHeader>
                             <CardContent>
@@ -116,8 +124,8 @@ export default function Post() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <aside className="w-full lg:w-[22%] mt-8 lg:mt-0">
-                            <div className="sticky top-20">
+                        <aside className="w-full lg:w-[24%] mt-8 lg:mt-0 lg:sticky lg:top-20">
+                            <div>
                                 <h3 className="text-xl font-bold mb-4">목차</h3>
                                 <ul>
                                     {toc.map((item: { id: string; text: string }) => (
@@ -137,3 +145,4 @@ export default function Post() {
         </div>
     );
 }
+

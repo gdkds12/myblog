@@ -2,6 +2,7 @@
 "use client";
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isVisible, setIsVisible] = useState(true);
@@ -25,12 +26,13 @@ export default function Header() {
     if (typeof window !== 'undefined') {
       window.addEventListener('scroll', controlNavbar);
 
-      // cleanup function
       return () => {
         window.removeEventListener('scroll', controlNavbar);
       };
     }
   }, []);
+
+  const pathname = usePathname();
 
   return (
     <header className={`fixed top-0 left-0 right-0 transition-all duration-300 z-50 ${isAtTop ? '' : (isVisible ? 'translate-y-0' : '-translate-y-full')}`}>
@@ -42,9 +44,10 @@ export default function Header() {
                 <Link href="/" className="flex items-center">
                   <img src="/logo.png" alt="Logo" className="h-6 w-6" />
                 </Link>
-                <Link href="/blog" className="text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">블로그</Link>
-                <Link href="/articles" className="text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">아티클</Link>
-                <Link href="/docs" className="text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">문서</Link>
+
+                <Link href="/" className={`text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 ${pathname === '/' ? 'relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[2px] after:bg-black dark:after:bg-white' : ''}`}>블로그</Link> 
+                <Link href="/articles" className={`text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 ${pathname === '/articles' ? 'relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[2px] after:bg-black dark:after:bg-white' : ''}`}>아티클</Link>
+                <Link href="/docs" className={`text-sm font-normal hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 ${pathname === '/docs' ? 'relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[2px] after:bg-black dark:after:bg-white' : ''}`}>문서</Link>
               </div>
             </div>
           </div>
