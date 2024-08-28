@@ -4,9 +4,11 @@ interface TableOfContentsProps {
     toc: { id: string; text: string }[];
 }
 
+
+
 const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
     const [activeId, setActiveId] = useState<string | null>(null);
-    const headerOffset = 100; // 헤더 높이와 원하는 간격을 고려한 오프셋
+    const headerOffset = 1000; // 헤더 높이와 원하는 간격을 고려한 오프셋
 
     useEffect(() => {
         const handleScroll = () => {
