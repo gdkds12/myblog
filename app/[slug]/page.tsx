@@ -70,6 +70,12 @@ export default function Post() {
                         );
                     }
                 }
+                if (domNode.type === 'tag' && domNode.name === 'h2') {
+                    // ID를 추가하여 목차와 연결
+                    const text = domNode.children[0].data;
+                    const id = text.toLowerCase().replace(/\s+/g, '-');
+                    return <h2 id={id}>{text}</h2>;
+                }
             }
         });
     };
@@ -102,7 +108,10 @@ export default function Post() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <TableOfContents toc={toc} />
+                        {/* 목차를 포함하는 div의 스타일 조정 */}
+                        <div className="hidden lg:block relative lg:sticky lg:top-20 lg:w-[30%] lg:max-w-[300px]">
+                            <TableOfContents toc={toc} />
+                        </div>
                     </div>
                 )}
             </main>
