@@ -11,7 +11,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow py-6">
-        <div className="max-w-full md:max-w-[80%] mx-auto px-4">
+        <div className="max-w-full md:max-w-[70%] mx-auto px-4">
           <div className="flex justify-between items-center mb-6">
             <Categories />
             <DarkModeToggle />

@@ -6,7 +6,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="bg-white dark:bg-darkBg text-gray-900 dark:text-darkText min-h-full font-pretendard">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[80px]">
+          <div className="w-full px-0 sm:px-6 lg:px-8 pt-[80px]"> {/* 모바일에서 좌우 패딩을 제거 */}
             {children}
           </div>
         </ThemeProvider>
