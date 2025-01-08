@@ -1,0 +1,21 @@
+{
+    "name": "My Blog Development",
+    "dockerComposeFile": [
+         "docker-compose.yml"
+      ],
+       "service": "web",
+      "workspaceFolder": "/app",
+      "customizations": {
+            "vscode": {
+              "settings": {
+                  "terminal.integrated.shell.linux": "/bin/bash"
+                },
+              "extensions": [
+                  "dbaeumer.vscode-eslint",
+                   "esbenp.prettier-vscode"
+                 ]
+           }
+        },
+      "forwardPorts": [3000, 80, 443],
+    "remoteUser": "ubuntu"
+  }
