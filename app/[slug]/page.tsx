@@ -14,6 +14,7 @@ import PostHeader from '../components/PostHeader';
 import TableOfContents from '../components/TableOfContents';
 import parse from 'html-react-parser';
 import Notice from '../components/Notice';
+import CommentSection from '../components/CommentSection';
 
 export default function Post() {
     const [post, setPost] = useState<PostOrPage | null>(null);
@@ -95,7 +96,7 @@ export default function Post() {
             <div className="fixed top-4 right-4 z-50">
                 <DarkModeToggle />
             </div>
-            <main className="flex-grow mx-auto py-0 sm:px-6 lg:px-8 xl:px-16 max-w-full lg:max-w-[95%] flex">
+            <main className="flex-grow mx-auto py-0 sm:px-6 lg:px-8 xl:px-16 max-w-[90%] flex" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
                 {!post ? (
                     <div>Loading...</div>
                 ) : (
@@ -106,6 +107,7 @@ export default function Post() {
                                 <div className="prose dark:prose-invert max-w-none">
                                     {renderContent(post.html || '')}
                                 </div>
+                                <CommentSection slug={slug} />
                             </CardContent>
                         </Card>
                         {/* 목차를 포함하는 div의 스타일 조정 */}
