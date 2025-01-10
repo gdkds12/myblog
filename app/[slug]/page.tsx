@@ -96,12 +96,12 @@ export default function Post() {
             <div className="fixed top-4 right-4 z-50">
                 <DarkModeToggle />
             </div>
-            <main className="flex-grow mx-auto py-0 sm:px-6 lg:px-8 xl:px-16 w-full flex" >
+            <main className="flex-grow mx-auto py-0  w-full flex" >
                 {!post ? (
                     <div>Loading...</div>
                 ) : (
-                    <div className="flex flex-col lg:flex-row lg:gap-8 w-full px-4 sm:px-0"> {/* 모바일 패딩 제거 */}
-                        <Card className="w-full lg:w-[75%] bg-transparent border-none shadow-none p-0 lg:ml-16">
+                    <div className="flex flex-col lg:flex-row lg:gap-8 w-full px-4 sm:px-0 lg:px-8 lg:max-w-[70%] mx-auto"> {/* lg:px-8 추가, lg:max-w-[80%] 추가*/}
+                        <Card className="w-full lg:w-[75%] bg-transparent border-none shadow-none p-0 ">
                             <PostHeader title={postTitle} tags={postTags} featureImage={postFeatureImage} />
                             <CardContent>
                                 <div className="prose dark:prose-invert max-w-none">
