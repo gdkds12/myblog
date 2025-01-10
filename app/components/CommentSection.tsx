@@ -107,24 +107,24 @@ const CommentSection: React.FC<{ slug: string }> = ({ slug }) => {
     };
 
     return (
-        <div className="mt-8">
+        <div className="mt-8 px-4 sm:px-0"> {/* Added responsive padding */}
             <h3 className="text-xl font-semibold mb-4">댓글</h3>
             {error && <p className="text-red-500 mb-2">{error}</p>}
             <div className="mb-4 p-4 border rounded border-gray-300 dark:border-gray-700">
-              <div className="flex mb-2">
+              <div className="flex flex-col sm:flex-row mb-2"> {/* Changed to flex-col on small screens */}
                 <input
                     type="text"
                     placeholder="닉네임"
                     value={nickname}
                     onChange={handleNicknameChange}
-                     className="border p-2 mr-2 rounded text-black dark:text-white dark:bg-transparent focus:outline-none"
+                     className="border p-2 mr-0 sm:mr-2 mb-2 sm:mb-0 rounded text-black dark:text-white dark:bg-transparent focus:outline-none w-full sm:w-auto" // Adjusted width
                 />
                 <input
                     type="password"
                     placeholder="비밀번호"
                     value={password}
                     onChange={handlePasswordChange}
-                     className="border p-2 mr-2 rounded text-black dark:text-white dark:bg-transparent focus:outline-none"
+                     className="border p-2 mr-0 sm:mr-2 rounded text-black dark:text-white dark:bg-transparent focus:outline-none w-full sm:w-auto" // Adjusted width
                 />
              </div>
                 <textarea
@@ -139,30 +139,33 @@ const CommentSection: React.FC<{ slug: string }> = ({ slug }) => {
 
             {comments.map((comment) => (
                 <div key={comment.id} className="border-b py-4 relative">
-                    <div className="flex items-center mb-2">
-                        <span className="font-semibold mr-2">{comment.nickname}</span>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center mb-2">  {/* Adjusted flex direction and alignment */}
+                        <span className="font-semibold mr-0 sm:mr-2 mb-1 sm:mb-0">{comment.nickname}</span>  {/* Adjusted margin */}
                         <span className="text-gray-500 text-sm">
                             {new Date(comment.createdAt).toLocaleString()}
                         </span>
                     </div>
-                    <p>{comment.content}</p>
+                    <p className="mt-1">{comment.content}</p> {/* Added mt-1 for spacing */}
                 <div className="absolute top-0 right-0">
                   <button onClick={() => handleShowDeletePassword(comment.id)} className="text-red-500 hover:text-red-700 cursor-pointer">
                        삭제
                    </button>
                    {showDeletePasswordInput === comment.id  && (
-                    <div>
+                    <div className="flex flex-col mt-1"> {/* Changed to flex column for mobile */}
                         <input
                             type="password"
                             placeholder="삭제 비밀번호"
                             value={deletePassword}
                             onChange={handleDeletePasswordChange}
-                             className="border p-1 mr-2 rounded text-black dark:text-white dark:bg-transparent focus:outline-none"
+                             className="border p-1 mr-0 sm:mr-2 mb-1 rounded text-black dark:text-white dark:bg-transparent focus:outline-none w-full sm:w-auto" // Adjusted width and added margin bottom
                         />
-                         <button onClick={() => deleteComment(comment.id)} className="text-red-500 hover:text-red-700 cursor-pointer">
-                         완료
-                         </button>
-                       <button onClick={() => handleCancelDelete(comment.id)} className="text-gray-500 hover:text-gray-700 cursor-pointer">취소</button>
+                        <div className="flex">
+                           <button onClick={() => deleteComment(comment.id)} className="text-red-500 hover:text-red-700 cursor-pointer mr-2">
+                               완료
+                            </button>
+                            <button onClick={() => handleCancelDelete(comment.id)} className="text-gray-500 hover:text-gray-700 cursor-pointer">취소</button>
+                         </div>
+
                     </div>
                   )}
 
