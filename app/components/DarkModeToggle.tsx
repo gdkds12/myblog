@@ -24,10 +24,10 @@ const DarkModeToggle = () => {
     return (
         <button
             onClick={toggleDarkMode}
-            className="relative rounded-full w-14 h-7 focus:outline-none border border-gray-300 dark:border-gray-600 transition-colors duration-300"
+            className="relative rounded-full w-14 h-7 focus:outline-none border border-gray-300 dark:border-gray-600 transition-colors duration-300 focus:ring-0 focus:ring-offset-0 focus:shadow-none" // focus 스타일 재정의
         >
             <div
-                className={`absolute top-[2px] left-[2px] bg-white dark:bg-gray-800 opacity-70 rounded-full w-[24px] h-[24px] transition-transform duration-300 ${
+                className={`absolute top-[2px] left-[2px] bg-gray-200 dark:bg-gray-700 opacity-70 rounded-full w-[24px] h-[24px] transition-transform duration-300 ${
                     theme === 'dark' ? 'transform translate-x-7' : ''
                 }`}
             />

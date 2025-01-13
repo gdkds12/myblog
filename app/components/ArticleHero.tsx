@@ -1,59 +1,141 @@
-// /app/components/ArticleHero.tsx
-import { Card, CardContent } from "@/components/ui/card";
-import { Star } from 'lucide-react';
+// app/components/ArticleHero.tsx
+"use client";
+
+import { Card } from "@/components/ui/card";
+import api from '@/lib/ghost';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PostOrPage } from "@tryghost/content-api";
 
 interface ArticleHeroProps {
-  theme: string
+  theme: string;
 }
 
 const ArticleHero = ({ theme }: ArticleHeroProps) => {
+    const [featuredPosts, setFeaturedPosts] = useState<PostOrPage[]>([]);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            setIsLoading(true);
+            try {
+                const posts = await api.posts.browse({
+                    limit: 5,
+                    include: ['tags', 'authors'],
+                    order: 'published_at DESC'
+                });
+                setFeaturedPosts(posts);
+                setIsLoading(false);
+            } catch (error: any) {
+                console.error('Error fetching posts:', error);
+                setError("Failed to load featured posts.");
+                setIsLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, []);
+
+     const handlePrevSlide = () => {
+        setCurrentSlide((prevSlide) => (prevSlide === 0 ? featuredPosts.length - 1 : prevSlide - 1));
+    };
+    
+    const handleNextSlide = () => {
+        setCurrentSlide((prevSlide) => (prevSlide === featuredPosts.length - 1 ? 0 : prevSlide + 1));
+    };
+    
+    if (isLoading) {
+      return <div className="text-lg">Loading featured posts...</div>;
+    }
+
+    if (error) {
+      return <div className="text-lg text-red-500">{error}</div>;
+    }
+
+    if (!featuredPosts || featuredPosts.length === 0) {
+      return <div className="text-lg">No featured posts found.</div>
+    }
+
+    const currentPost = featuredPosts[currentSlide];
+    const formattedDate = currentPost.published_at
+    ? new Date(currentPost.published_at).toLocaleDateString('en-CA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).replace(/\//g, '-')
+    : '날짜 정보 없음';
+
   return (
     <div className="relative">
         {/* 21:9 비율 컨테이너 및 배경 추가 */}
-        <div className="aspect-[21/9] overflow-hidden rounded-lg flex bg-gray-100 dark:bg-gray-900 p-10">
+        <div className="aspect-[21/9] overflow-hidden rounded-lg flex bg-gray-100 dark:bg-[#1b1b1b] p-10">
             {/* 카드 컨테이너 */}
-            <div className="w-1/2 flex items-center justify-center relative h-full">
-                <Card className={`bg-blue-500 dark:bg-blue-700 text-white dark:text-gray-100 aspect-square h-full rounded-xl`}>
-                    <CardContent className="p-0 h-full flex items-center justify-center">
-                        <div className="flex flex-col items-center justify-center">
-                            <div className="w-24 h-24 bg-white/10 dark:bg-white/20 rounded-lg flex items-center justify-center">
-                                <Star className="w-12 h-12 text-white" />
-                            </div>
+             <div className="flex items-center justify-center relative h-full -mr-2" style={{ width: '420px' }}>
+                 <Link href={`/${currentPost.slug}`} className="block group relative">
+                    <div className={`bg-blue-500 dark:bg-blue-700 text-white dark:text-gray-100 h-[420px] w-[420px] rounded-xl overflow-hidden`}>
+                        <div className="relative w-full h-full">
+                           {currentPost.feature_image && (
+                                <Image
+                                    src={currentPost.feature_image}
+                                    alt={currentPost.title || ''}
+                                    width={420}
+                                    height={420}
+                                    className="object-cover transition-transform duration-200 group-hover:scale-105"
+                                    unoptimized
+                                />
+                            )}
+                            <div className="absolute inset-0 bg-black/20" /> {/* 오버레이 불투명도 조정 */}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </Link>
             </div>
             {/* 내용과 슬라이드 컨트롤 컨테이너 */}
-            <div className="w-1/2 flex flex-col justify-center p-8">
-                <div className="flex flex-col items-start">
-                    <span className="text-sm text-gray-500 dark:text-gray-400 mb-1">Article</span>
-                    <h2 className="text-2xl font-bold mb-2">
-                        2024 시니어 트렌드(2): 액티브 시니어의 여가생활 및 관심사
-                    </h2>
-                    <p className="text-gray-700 dark:text-gray-300 mb-4">
-                        편리하는 시니어 라이프스타일을 확인하세요.
-                    </p>
-                </div>
-                {/* 슬라이드 컨트롤 */}
-                <div className="flex items-center mt-4"> {/* justify-between 삭제 */}
-                  <div className="flex items-center space-x-2 mr-4"> {/* 슬라이드 표시, 오른쪽 여백 추가 */}
-                    {[0, 1, 2, 3, 4].map((dot) => (
-                      <button
-                        key={dot}
-                        className={`w-2 h-2 rounded-full ${dot === 0 ? 'bg-gray-500' : 'bg-gray-500/50 dark:bg-gray-500 dark:bg-opacity-50'}`}
-                        aria-label={`Go to slide ${dot + 1}`}
-                      />
-                    ))}
+            <div className="w-1/2 flex flex-col justify-between relative">
+                
+                <div className="pl-8 mt-4">
+                  {/* 슬라이드 컨트롤 */}
+                  <div className="flex items-center justify-between w-full mb-8"> {/* 슬라이드 컨트롤 간격 조정 */}
+                      <div className="flex items-center space-x-2 mr-4">
+                          {[...Array(featuredPosts.length)].map((_, index) => (
+                              <button
+                                  key={index}
+                                  className={`w-2 h-2 rounded-full ${
+                                  index === currentSlide ? 'bg-gray-500' : 'bg-gray-500/50 dark:bg-gray-500 dark:bg-opacity-50'
+                                  }`}
+                                  aria-label={`Go to slide ${index + 1}`}
+                                  onClick={(e) => {
+                                      e.stopPropagation(); // 이벤트 전파 방지
+                                  }}
+                              />
+                          ))}
+                      </div>
+                      <div className="flex items-center space-x-4">
+                          <button aria-label="Previous slide" onClick={handlePrevSlide}>
+                              <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          </button>
+                          <button aria-label="Next slide" onClick={handleNextSlide}>
+                              <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          </button>
+                      </div>
                   </div>
-                  <div className="flex items-center space-x-4"> {/* 버튼 간격 넓힘 */}
-                    <button aria-label="Previous slide">
-                      <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    </button>
-                    <button aria-label="Next slide">
-                      <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    </button>
-                  </div>
+                  <div className="group">
+                      <Link href={`/${currentPost.slug}`} className="block">
+                       <div className="flex flex-col items-start transition-colors duration-200 group-hover:text-blue-500 dark:group-hover:text-blue-400" style={{ lineHeight: '1.7' }}>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 mb-5">Article</span>
+                                <h2 className="text-4xl font-semibold mb-7">
+                                    {currentPost.title}
+                                </h2>
+                           <p className="text-base text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                              {currentPost.excerpt}
+                            </p>
+                           <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
+                         </div>
+                      </Link>
+                 </div>
                 </div>
             </div>
         </div>

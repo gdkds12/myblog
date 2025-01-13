@@ -1,49 +1,95 @@
-// /app/components/ArticleGrid.tsx
-import { Card, CardContent } from "@/components/ui/card";
-import { Star, Activity, Play } from 'lucide-react';
+// app/components/ArticleGrid.tsx
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import api from '@/lib/ghost';
+import Link from 'next/link';
+import Image from 'next/image';
+import { PostOrPage } from '@tryghost/content-api';
 
 interface ArticleGridProps {
-  theme: string
+    theme: string;
 }
 
-const ArticleGrid = ({ theme }: ArticleGridProps) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className={`bg-blue-500 dark:bg-blue-700 text-white dark:text-gray-100 aspect-video`}>
-            <CardContent className="p-6">
-              <div className="mb-4 w-12 h-12 bg-white/10 dark:bg-white/20 rounded-lg flex items-center justify-center">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-xs mb-2">Article</p>
-              <h3 className="text-lg font-semibold mb-2">2024 시니어 트렌드(2): 액티브 시니어의 여가생활 및 관심사</h3>
-              <p className="text-white dark:text-gray-100 text-sm mb-2">편리하는 시니어 라이프스타일을 확인하세요.</p>
-              {/* 날짜 표시 제거 */}
-            </CardContent>
-          </Card>
+const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
+    const [posts, setPosts] = useState<PostOrPage[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-          <Card className={`bg-purple-500 dark:bg-purple-700 text-white dark:text-gray-100 aspect-video`}>
-            <CardContent className="p-6">
-              <div className="mb-4 w-12 h-12 bg-white/10 dark:bg-white/20 rounded-lg flex items-center justify-center">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-xs mb-2">Article</p>
-              <h3 className="text-lg font-semibold mb-2">2024 시니어 트렌드(1): 시니어의 노후 준비와 건강 관리</h3>
-              <p className="text-white dark:text-gray-100 text-sm mb-2">시니어의 니즈를 파악하고 새로운 비즈니스 기회를 발굴하세요.</p>
-              {/* 날짜 표시 제거 */}
-            </CardContent>
-          </Card>
+    useEffect(() => {
+        const fetchPosts = async () => {
+            setIsLoading(true);
+            try {
+                const fetchedPosts = await api.posts.browse({
+                    limit: 8,
+                    include: ['tags', 'authors'],
+                    order: 'published_at DESC'
+                });
+                setPosts(fetchedPosts);
+                setIsLoading(false);
+            } catch (error: any) {
+                console.error('Error fetching posts:', error);
+                setError("Failed to load articles.");
+                setIsLoading(false);
+            }
+        };
 
-          <Card className={`bg-gradient-to-br from-blue-400 to-blue-100 dark:from-blue-600 dark:to-blue-800 text-blue-900 dark:text-white aspect-video`}>
-            <CardContent className="p-6">
-              <div className="mb-4 w-12 h-12 bg-white/10 dark:bg-white/20 rounded-lg flex items-center justify-center">
-                <Play className={`w-6 h-6 text-blue-900 dark:text-white`} />
-              </div>
-              <p className="text-xs mb-2">Article</p>
-              <h3 className="text-lg font-semibold mb-2">2024 콘텐츠 트렌드: 웰푼은 중고 피코믹은 유행하는 이유</h3>
-              <p className="text-sm mb-2">지금 소비자가 좋아는 콘텐츠는 무엇일까요?</p>
-              {/* 날짜 표시 제거 */}
-            </CardContent>
-          </Card>
+        fetchPosts();
+    }, []);
+
+    if (isLoading) {
+        return <div className="text-lg">Loading articles...</div>;
+    }
+
+    if (error) {
+        return <div className="text-lg text-red-500">{error}</div>;
+    }
+
+    if (!posts || posts.length === 0) {
+        return <div className="text-lg">No articles found.</div>;
+    }
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {posts.map((post) => {
+                const formattedDate = post.published_at
+                    ? new Date(post.published_at).toLocaleDateString('en-CA', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                    }).replace(/\//g, '-')
+                    : '날짜 정보 없음';
+                return (
+                     <Link
+                        key={post.id}
+                        href={`/${post.slug}`}
+                        className="group relative flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+                    >
+                        {/* 썸네일 이미지 컨테이너 */}
+                         <div className="relative aspect-square overflow-hidden rounded-xl">
+                             {post.feature_image && (
+                                <Image
+                                    src={post.feature_image}
+                                    alt={post.title || ""}
+                                    fill
+                                    className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
+                                    unoptimized
+                                />
+                            )}
+                        </div>
+                        {/* 텍스트 내용 */}
+                        <div className="p-4">
+                            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                {post.title}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+                                {post.excerpt}
+                            </p>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
+                        </div>
+                    </Link>
+                );
+            })}
         </div>
     );
 };

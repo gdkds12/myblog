@@ -1,5 +1,5 @@
-"use client"; // 클라이언트 측 렌더링을 위해 추가
-
+// app/post/[slug]/page.tsx
+"use client";
 import { useState, useEffect } from 'react';
 import api from '@/lib/ghost';
 import { useParams } from 'next/navigation';
@@ -15,12 +15,15 @@ import TableOfContents from '../components/TableOfContents';
 import parse from 'html-react-parser';
 import Notice from '../components/Notice';
 import CommentSection from '../components/CommentSection';
+import { useTheme } from 'next-themes';
+
 
 export default function Post() {
     const [post, setPost] = useState<PostOrPage | null>(null);
     const [toc, setToc] = useState<{ id: string; text: string }[]>([]);
     const params = useParams();
     const slug = params.slug as string;
+    const { theme } = useTheme();
 
     useEffect(() => {
         async function fetchPost() {
@@ -54,10 +57,10 @@ export default function Post() {
 
         const processedContent = processNotices(content);
 
-        return parse(processedContent, {
+         return parse(processedContent, {
             replace: (domNode: any) => {
-                if (domNode.type === 'tag' && domNode.name === 'notice') {
-                    return <Notice type={domNode.attribs.type}>{domNode.children[0].data}</Notice>;
+              if (domNode.type === 'tag' && domNode.name === 'notice') {
+                    return <Notice type={domNode.attribs.type}>{domNode.children[0]?.data}</Notice>;
                 }
                 if (domNode.type === 'tag' && domNode.name === 'pre' && domNode.children[0]?.name === 'code') {
                     const className = domNode.children[0].attribs.class;
@@ -66,20 +69,25 @@ export default function Post() {
                         return (
                             <CodeBlock
                                 language={match[1]}
-                                code={domNode.children[0].children[0].data}
+                                code={domNode.children[0].children[0]?.data}
                             />
                         );
                     }
                 }
-                if (domNode.type === 'tag' && domNode.name === 'h2') {
-                    // ID를 추가하여 목차와 연결
-                    const text = domNode.children[0].data;
-                    const id = text.toLowerCase().replace(/\s+/g, '-');
-                    return <h2 id={id}>{text}</h2>;
-                }
+
+                 if (domNode.type === 'tag' && domNode.name === 'h2') {
+                     // ID를 추가하여 목차와 연결
+                    if(domNode.children && domNode.children[0] && domNode.children[0].data){
+                        const text = domNode.children[0].data;
+                        const id = text.toLowerCase().replace(/\s+/g, '-');
+                        return <h2 id={id}>{text}</h2>;
+                    }
+                    return <h2/>; // text가 없는 경우 비어있는 h2태그 반환
+                 }
             }
         });
     };
+
 
     // 포스트가 없는 경우 기본값 설정
     const postTitle = post?.title || '제목 없음';
@@ -90,7 +98,7 @@ export default function Post() {
     const postFeatureImage = post?.feature_image || '';
 
     return (
-        <div className="min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7]">
+        <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
             <ScrollProgressBar />
             <Header />
             <div className="fixed top-4 right-4 z-50">
