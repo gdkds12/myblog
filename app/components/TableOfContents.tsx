@@ -4,14 +4,15 @@ interface TableOfContentsProps {
     toc: { id: string; text: string }[];
 }
 
+
+
 const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
     const [activeId, setActiveId] = useState<string | null>(null);
-    const scrollOffset = window.innerHeight / 4; // 목차 클릭 시 스크롤 위치 조정
-    const activeOffset = window.innerHeight / 2.2; // 스크롤 시 목차 활성화 기준선 조정
+    const headerOffset = 1000; // 헤더 높이와 원하는 간격을 고려한 오프셋
 
     useEffect(() => {
         const handleScroll = () => {
-            const scrollPosition = window.scrollY;
+            const scrollPosition = window.scrollY + 100;
             const sections = toc.map(item => document.getElementById(item.id));
             let newActiveId: string | null = null;
 
@@ -20,22 +21,16 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
                 if (!section) continue;
 
                 const { offsetTop, clientHeight } = section;
-                const sectionTop = offsetTop - activeOffset;
-                const sectionBottom = offsetTop + clientHeight - activeOffset;
-
                 const nextSection = sections[i + 1];
 
-                if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                if (scrollPosition >= offsetTop && scrollPosition < offsetTop + clientHeight) {
                     newActiveId = section.id;
-                } else if (
-                    nextSection &&
-                    scrollPosition >= sectionTop &&
-                    scrollPosition < nextSection.offsetTop - activeOffset
-                ) {
+                } else if (nextSection && scrollPosition >= offsetTop && scrollPosition < nextSection.offsetTop) {
                     newActiveId = section.id;
                     break;
                 }
-                  if (i === sections.length - 1 && scrollPosition >= sectionTop) {
+
+                if (i === sections.length - 1 && scrollPosition >= offsetTop) {
                     newActiveId = section.id;
                 }
             }
@@ -47,7 +42,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [toc, activeOffset]);
+    }, [toc]);
 
     if (toc.length === 0) return null;
 
@@ -63,14 +58,13 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
                                 e.preventDefault();
                                 const targetElement = document.getElementById(item.id);
                                 if (targetElement) {
-                                    const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - scrollOffset;
+                                    const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - headerOffset;
                                     window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-                                    setActiveId(item.id);
                                 }
                             }}
                             className={`block transition-all duration-200 ${
-                                activeId === item.id
-                                    ? 'text-blue-600 text-lg font-semibold'
+                                activeId === item.id 
+                                    ? 'text-blue-600 text-lg font-semibold' 
                                     : 'text-base text-gray-700'
                             }`}
                         >
