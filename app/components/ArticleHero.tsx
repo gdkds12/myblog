@@ -26,8 +26,20 @@ const ArticleHero = ({ theme }: ArticleHeroProps) => {
                 const posts = await api.posts.browse({
                     limit: 5,
                     include: ['tags', 'authors'],
-                    order: 'published_at DESC'
+                    order: 'published_at DESC',
+                    filter: 'tags:[atikeul]' // 태그 슬러그로 필터링
                 });
+                 posts.forEach(post => {
+                    console.log(`Post title: ${post.title}`);
+                    if (post.tags && post.tags.length > 0) {
+                        console.log(`  Tags:`, post.tags);
+                        post.tags.forEach(tag => {
+                            console.log(`   - Tag Name: ${tag.name}, Slug: ${tag.slug}`);
+                        })
+                    } else {
+                      console.log(`  No tags found for this post.`);
+                    }
+                  });
                 setFeaturedPosts(posts);
                 setIsLoading(false);
             } catch (error: any) {
@@ -75,7 +87,7 @@ const ArticleHero = ({ theme }: ArticleHeroProps) => {
         <div className="aspect-[21/9] overflow-hidden rounded-lg flex bg-gray-100 dark:bg-[#1b1b1b] p-10">
             {/* 카드 컨테이너 */}
              <div className="flex items-center justify-center relative h-full -mr-2" style={{ width: '420px' }}>
-                 <Link href={`/${currentPost.slug}`} className="block group relative">
+                 <Link href={`/article/${currentPost.slug}`} className="block group relative"> {/* 변경된 부분 */}
                     <div className={`bg-blue-500 dark:bg-blue-700 text-white dark:text-gray-100 h-[420px] w-[420px] rounded-xl overflow-hidden`}>
                         <div className="relative w-full h-full">
                            {currentPost.feature_image && (
@@ -123,7 +135,7 @@ const ArticleHero = ({ theme }: ArticleHeroProps) => {
                       </div>
                   </div>
                   <div className="group">
-                      <Link href={`/${currentPost.slug}`} className="block">
+                      <Link href={`/article/${currentPost.slug}`} className="block">
                        <div className="flex flex-col items-start transition-colors duration-200 group-hover:text-blue-500 dark:group-hover:text-blue-400" style={{ lineHeight: '1.7' }}>
                             <span className="text-sm text-gray-500 dark:text-gray-400 mb-5">Article</span>
                                 <h2 className="text-4xl font-semibold mb-7">

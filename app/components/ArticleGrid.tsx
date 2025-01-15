@@ -5,14 +5,24 @@ import React, { useState, useEffect } from 'react';
 import api from '@/lib/ghost';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PostOrPage } from '@tryghost/content-api';
+import { PostOrPage, Tag } from '@tryghost/content-api';
 
 interface ArticleGridProps {
     theme: string;
 }
 
+
+interface TagWithSlug extends Tag {
+    slug: string;
+}
+
+interface PostWithTags extends PostOrPage {
+    tags?: TagWithSlug[];
+}
+
+
 const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
-    const [posts, setPosts] = useState<PostOrPage[]>([]);
+    const [posts, setPosts] = useState<PostWithTags[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +35,14 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                     include: ['tags', 'authors'],
                     order: 'published_at DESC'
                 });
-                setPosts(fetchedPosts);
+                const postsWithTags = fetchedPosts.map(post => ({
+                    ...post,
+                    tags: post.tags?.map(tag => ({
+                        ...tag,
+                         slug: tag.slug
+                    }))
+                }));
+                setPosts(postsWithTags.filter(post => post.tags?.some(tag => tag.slug === 'atikeul')));
                 setIsLoading(false);
             } catch (error: any) {
                 console.error('Error fetching posts:', error);
@@ -62,7 +79,7 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                 return (
                      <Link
                         key={post.id}
-                        href={`/${post.slug}`}
+                        href={`/article/${post.slug}`} // 변경된 부분
                         className="group relative flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
                     >
                         {/* 썸네일 이미지 컨테이너 */}

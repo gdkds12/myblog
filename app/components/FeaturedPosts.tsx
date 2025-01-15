@@ -1,3 +1,4 @@
+// app/components/FeaturedPosts.tsx
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,10 +6,18 @@ import api from '@/lib/ghost';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PostOrPage } from "@tryghost/content-api";
+import { PostOrPage, Tag } from "@tryghost/content-api";
+
+interface TagWithSlug extends Tag {
+    slug: string;
+}
+
+interface PostWithTags extends PostOrPage {
+    tags?: TagWithSlug[];
+}
 
 export default function FeaturedPosts() {
-  const [featuredPosts, setFeaturedPosts] = useState<PostOrPage[]>([]);
+  const [featuredPosts, setFeaturedPosts] = useState<PostWithTags[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -16,12 +25,20 @@ export default function FeaturedPosts() {
       .browse({
         limit: 3,
         include: ['tags', 'authors'],
-        order: 'published_at DESC'
+        order: 'published_at DESC',
+         filter: 'tags:[main]' // main 태그가 있는 게시물만 가져오도록 수정
       })
-      .then((posts) => {
-        setFeaturedPosts(posts);
-        setIsLoading(false);
-      })
+      .then((fetchedPosts) => {
+          const postsWithTags = fetchedPosts.map(post => ({
+              ...post,
+               tags: post.tags?.map(tag => ({
+                    ...tag,
+                    slug: tag.slug
+                }))
+            }));
+          setFeaturedPosts(postsWithTags);
+           setIsLoading(false);
+        })
       .catch((err) => {
         console.error(err);
         setIsLoading(false);
@@ -42,7 +59,7 @@ export default function FeaturedPosts() {
             aspect-[8/5] relative overflow-hidden group
           `}
         >
-          <Link href={`/${post.slug}`} className="block h-full">
+          <Link href={`/post/${post.slug}`} className="block h-full"> {/* 변경 부분 */}
             {post.feature_image && (
               <div className="absolute inset-0">
                 <Image
@@ -51,7 +68,7 @@ export default function FeaturedPosts() {
                   layout="fill"
                   objectFit="cover"
                   className="transition-transform duration-300 group-hover:scale-105"
-                  unoptimized
+                   unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-50" />
               </div>

@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/ghost';
 import { useParams } from 'next/navigation';
 import { PostOrPage } from "@tryghost/content-api";
-import DarkModeToggle from '../components/DarkModeToggle';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import DarkModeToggle from '../../components/DarkModeToggle';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import { Card, CardContent } from "@/components/ui/card";
-import ScrollProgressBar from '../components/ScrollProgressBar';
-import CodeBlock from '../components/CodeBlock';
-import PostHeader from '../components/PostHeader';
-import TableOfContents from '../components/TableOfContents';
+import ScrollProgressBar from '../../components/ScrollProgressBar';
+import CodeBlock from '../../components/CodeBlock';
+import PostHeader from '../../components/PostHeader';
+import TableOfContents from '../../components/TableOfContents';
 import parse from 'html-react-parser';
-import Notice from '../components/Notice';
-import CommentSection from '../components/CommentSection';
+import Notice from '../../components/Notice';
+import CommentSection from '../../components/CommentSection';
 import { useTheme } from 'next-themes';
 
 
@@ -28,7 +28,10 @@ export default function Post() {
     useEffect(() => {
         async function fetchPost() {
             try {
-                const fetchedPost = await api.posts.read({ slug }, { include: ['tags', 'authors'] });
+                const fetchedPost = await api.posts.read(
+                    { slug },
+                    { include: ['tags', 'authors'], filter: 'tag:-article' }
+                );
                 setPost(fetchedPost);
                 document.title = fetchedPost.title || 'Blog Post';
 
@@ -47,7 +50,7 @@ export default function Post() {
         fetchPost();
     }, [slug]);
 
-    const renderContent = (content: string) => {
+   const renderContent = (content: string) => {
         const processNotices = (htmlString: string) => {
             const noticeRegex = /\[(notice|info|warning|success|error)\]([\s\S]*?)\[\/\1\]/g;
             return htmlString.replace(noticeRegex, (match, type, content) => {
@@ -88,7 +91,6 @@ export default function Post() {
         });
     };
 
-
     // 포스트가 없는 경우 기본값 설정
     const postTitle = post?.title || '제목 없음';
     const postTags = post?.tags?.map(tag => ({
@@ -98,7 +100,7 @@ export default function Post() {
     const postFeatureImage = post?.feature_image || '';
 
     return (
-        <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
+         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
             <ScrollProgressBar />
             <Header />
             <div className="fixed top-4 right-4 z-50">
