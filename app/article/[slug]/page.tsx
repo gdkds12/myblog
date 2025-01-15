@@ -14,8 +14,12 @@ import PostHeader from '../../components/PostHeader';
 import ArticlePostHeader from '../../components/ArticlePostHeader';
 import parse from 'html-react-parser';
 import Notice from '../../components/Notice';
-import CommentSection from '../../components/CommentSection';
 import { useTheme } from 'next-themes';
+import RelatedArticles from '../../components/RelatedArticles';
+import EditorInfo from '../../components/EditorInfo';
+import Image from 'next/image'; // Import Image from next/image
+import { Dialog, DialogContent, DialogOverlay } from "../../components/dialog"; // Import dialog components
+import { X } from 'lucide-react'; // Import close icon
 
 export default function Article() {
     const [post, setPost] = useState<PostOrPage | null>(null);
@@ -23,6 +27,8 @@ export default function Article() {
     const params = useParams();
     const slug = params.slug as string;
     const { theme } = useTheme();
+    const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string | undefined } | null>(null);
 
     useEffect(() => {
         async function fetchPost() {
@@ -48,6 +54,17 @@ export default function Article() {
 
         fetchPost();
     }, [slug]);
+
+    const handleImageClick = (src: string, alt: string | undefined) => {
+        setSelectedImage({ src, alt });
+        setIsImageDialogOpen(true);
+    };
+
+    const handleCloseImageDialog = () => {
+        setIsImageDialogOpen(false);
+        setSelectedImage(null);
+    };
+
 
   const renderContent = (content: string) => {
         const processNotices = (htmlString: string) => {
@@ -86,22 +103,34 @@ export default function Article() {
                     }
                     return <h2/>; // text가 없는 경우 비어있는 h2태그 반환
                  }
+                 if (domNode.type === 'tag' && domNode.name === 'img') {
+                    const src = domNode.attribs.src;
+                    const alt = domNode.attribs.alt;
+                    return (
+                         <Image
+                            src={src}
+                            alt={alt || 'image'}
+                            width={800} // Adjust as necessary
+                            height={500} // Adjust as necessary
+                            className="cursor-pointer"
+                            onClick={() => handleImageClick(src, alt)}
+                         />
+                    )
+                }
             }
         });
     };
     // 포스트가 없는 경우 기본값 설정
     const postTitle = post?.title || '제목 없음';
-    const postTags = post?.tags?.map(tag => ({
-        id: tag.id,
-        name: tag.name || '' // name이 undefined일 경우 빈 문자열로 대체
-    })) || [];
+    const postTags = post?.tags || [];
      // 날짜 형식
      const postDate = post?.published_at ? new Date(post.published_at).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       }) : '';
-      const readingTime = post?.reading_time ? String(post.reading_time) + ' min read' : '1 min read'; // 읽는 시간
+    const readingTime = post?.reading_time ? String(post.reading_time) + ' min read' : '1 min read'; // 읽는 시간
+
 
     return (
         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
@@ -118,7 +147,10 @@ export default function Article() {
                          <div className="pt-24"> {/* pt-8을 pt-24로 변경 */}
                             <ArticlePostHeader
                                 title={postTitle}
-                                tags={postTags}
+                                tags={postTags.map(tag => ({
+                                    id: tag.id,
+                                    name: tag.name || '' // name이 undefined일 경우 빈 문자열로 대체
+                                }))}
                                 date={postDate}
                                 readingTime={readingTime}
                             />
@@ -128,13 +160,36 @@ export default function Article() {
                                 <div className="prose dark:prose-invert max-w-none">
                                      {renderContent(post.html || '')}
                                 </div>
-                                <CommentSection slug={slug} />
                             </CardContent>
                         </Card>
+                         <EditorInfo authorIds={post.authors?.map(author => author.id)} />
+                        <RelatedArticles currentPostTags={post.tags || []} currentPostSlug={slug} />
                     </div>
                 )}
             </main>
             <Footer />
+             <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+                  <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                  <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-full w-[90vw] max-h-[90vh] p-0 bg-transparent border-none shadow-none overflow-hidden">
+                        {selectedImage && (
+                            <div className="relative flex flex-col justify-center items-center">
+                                <button
+                                    onClick={handleCloseImageDialog}
+                                    className="absolute top-2 right-2 p-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 z-10"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                                <Image
+                                   src={selectedImage.src}
+                                    alt={selectedImage.alt || 'enlarged image'}
+                                    width={1200}
+                                    height={900}
+                                    className="max-h-[80vh] object-contain"
+                                />
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
         </div>
     );
 }
