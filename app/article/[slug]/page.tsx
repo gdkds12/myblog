@@ -11,12 +11,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import ScrollProgressBar from '../../components/ScrollProgressBar';
 import CodeBlock from '../../components/CodeBlock';
 import PostHeader from '../../components/PostHeader';
-import TableOfContents from '../../components/TableOfContents';
+import ArticlePostHeader from '../../components/ArticlePostHeader';
 import parse from 'html-react-parser';
 import Notice from '../../components/Notice';
 import CommentSection from '../../components/CommentSection';
 import { useTheme } from 'next-themes';
-
 
 export default function Article() {
     const [post, setPost] = useState<PostOrPage | null>(null);
@@ -96,8 +95,13 @@ export default function Article() {
         id: tag.id,
         name: tag.name || '' // name이 undefined일 경우 빈 문자열로 대체
     })) || [];
-    const postFeatureImage = post?.feature_image || '';
-
+     // 날짜 형식
+     const postDate = post?.published_at ? new Date(post.published_at).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }) : '';
+      const readingTime = post?.reading_time ? String(post.reading_time) + ' min read' : '1 min read'; // 읽는 시간
 
     return (
         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
@@ -106,13 +110,20 @@ export default function Article() {
             <div className="fixed top-4 right-4 z-50">
                 <DarkModeToggle />
             </div>
-            <main className="flex-grow mx-auto py-0  w-full flex" >
+             <main className="flex-grow mx-auto py-0 w-full flex justify-center">
                 {!post ? (
                     <div>Loading...</div>
                 ) : (
-                    <div className="flex flex-col lg:flex-row lg:gap-8 w-full px-4 sm:px-0 lg:px-8 lg:max-w-[70%] mx-auto"> {/* lg:px-8 추가, lg:max-w-[80%] 추가*/}
-                        <Card className="w-full lg:w-[75%] bg-transparent border-none shadow-none p-0 ">
-                            <PostHeader title={postTitle} tags={postTags} featureImage={postFeatureImage} />
+                   <div className="w-full px-4 sm:px-0 lg:px-8 mx-auto max-w-[800px]">
+                         <div className="pt-24"> {/* pt-8을 pt-24로 변경 */}
+                            <ArticlePostHeader
+                                title={postTitle}
+                                tags={postTags}
+                                date={postDate}
+                                readingTime={readingTime}
+                            />
+                          </div>
+                        <Card className="w-full bg-transparent border-none shadow-none p-0 ">
                             <CardContent>
                                 <div className="prose dark:prose-invert max-w-none">
                                      {renderContent(post.html || '')}
@@ -120,10 +131,6 @@ export default function Article() {
                                 <CommentSection slug={slug} />
                             </CardContent>
                         </Card>
-                        {/* 목차를 포함하는 div의 스타일 조정 */}
-                        <div className="hidden lg:block relative lg:sticky lg:top-20 lg:w-[30%] lg:max-w-[300px]">
-                            <TableOfContents toc={toc} />
-                        </div>
                     </div>
                 )}
             </main>
