@@ -101,6 +101,26 @@
     }
   }
 
+/* MathJax 긴 수식 가로 스크롤 및 스타일 (수정) */
+.prose mjx-container[jax="SVG"][display="true"],
+.prose mjx-container[jax="CHTML"][display="true"] {
+  display: block; /* 블록 요소로 만들어 overflow 적용 */
+  overflow-x: auto; /* 가로 스크롤 */
+  overflow-y: hidden; /* 세로 스크롤 숨김 */
+  max-width: 100%; /* 부모 요소(.prose) 너비 초과 방지 */
+  box-sizing: border-box; /* 패딩/테두리 포함하여 너비 계산 */
+  padding: 0.5em 0.2em; /* 좌우 패딩 약간 추가 (선택 사항) */
+  white-space: nowrap; /* 수식이 줄바꿈되지 않도록 */
+  /* background-color: #f9f9f9; */ /* 디버깅용 배경색 */
+  /* border: 1px solid #eee; */ /* 디버깅용 테두리 */
+}
+
+/* 다크 모드일 때 MathJax 컨테이너 스타일 (선택 사항) */
+.dark .prose mjx-container[jax="SVG"][display="true"],
+.dark .prose mjx-container[jax="CHTML"][display="true"] {
+  /* background-color: #2a2a2a; */
+  /* border-color: #444; */
+}
 
 .prose h1 {
   font-size: 2.2em;

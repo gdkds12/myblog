@@ -1,6 +1,7 @@
 // app/post/[slug]/page.tsx
 "use client";
 import { useState, useEffect } from 'react';
+import Script from 'next/script';
 import api from '@/lib/ghost';
 import { useParams } from 'next/navigation';
 import { PostOrPage, Tag } from "@tryghost/content-api";
@@ -29,6 +30,7 @@ export default function Post() {
     const { theme } = useTheme();
     const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string | undefined } | null>(null);
+    const [isMathJaxReady, setIsMathJaxReady] = useState(false);
 
 
     useEffect(() => {
@@ -56,7 +58,16 @@ export default function Post() {
         fetchPost();
     }, [slug]);
 
-      const handleImageClick = (src: string, alt: string | undefined) => {
+    useEffect(() => {
+        if (post && isMathJaxReady && typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+            console.log("Attempting to typeset MathJax...");
+            (window as any).MathJax.typesetPromise()
+                .then(() => console.log("MathJax typesetting complete."))
+                .catch((err: any) => console.error('MathJax typesetting failed:', err));
+        }
+    }, [post, isMathJaxReady]);
+
+    const handleImageClick = (src: string, alt: string | undefined) => {
         setSelectedImage({ src, alt });
         setIsImageDialogOpen(true);
     };
@@ -95,7 +106,6 @@ export default function Post() {
                 }
 
                  if (domNode.type === 'tag' && domNode.name === 'h2') {
-                     // ID를 추가하여 목차와 연결
                     if(domNode.children && domNode.children[0] && domNode.children[0].data){
                         const text = domNode.children[0].data;
                         const id = text.toLowerCase().replace(/\s+/g, '-');
@@ -129,6 +139,29 @@ export default function Post() {
 
     return (
          <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
+            <Script id="mathjax-config">
+                {`
+                  MathJax = {
+                    tex: {
+                      inlineMath: [['$', '$'], ['\\(', '\\)']],
+                      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                    },
+                    svg: {
+                      fontCache: 'global'
+                    }
+                  };
+                `}
+            </Script>
+            <Script
+              id="mathjax-script"
+              async
+              src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+              onReady={() => {
+                console.log("MathJax script ready.");
+                setIsMathJaxReady(true);
+              }}
+             />
+
             <ScrollProgressBar />
             <Header />
             <div className="fixed top-4 right-4 z-50">
@@ -143,7 +176,7 @@ export default function Post() {
                            <Card className="w-full bg-transparent border-none shadow-none p-0 ">
                                 <PostHeader title={postTitle} tags={postTags.map(tag => ({id: tag.id, name: tag.name || ''}))} featureImage={postFeatureImage} />
                                 <CardContent>
-                                    <div className="prose dark:prose-invert max-w-none">
+                                    <div id="post-content" className="prose dark:prose-invert max-w-none">
                                         {renderContent(post.html || '')}
                                     </div>
                                 </CardContent>
