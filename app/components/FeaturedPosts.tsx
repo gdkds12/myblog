@@ -41,9 +41,8 @@ export default function FeaturedPosts({ featuredPosts }: FeaturedPostsProps) {
                 <Image
                   src={post.feature_image}
                   alt={post.title || ''}
-                  layout="fill"
-                  objectFit="cover"
-                  className="transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                    unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-50" />
