@@ -23,8 +23,8 @@ const ArticleHero = ({ theme }: ArticleHeroProps) => {
             setIsLoading(true);
             setError(null); // 에러 상태 초기화
             try {
-                // API Route 호출로 변경
-                const response = await fetch('/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[atikeul]');
+                // API Route 호출로 변경, 필터를 article로 수정
+                const response = await fetch('/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[article]');
                 if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`);
                 }
