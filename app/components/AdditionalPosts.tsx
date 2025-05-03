@@ -1,7 +1,6 @@
 // app/components/AdditionalPosts.tsx
 "use client";
 
-import api from '@/lib/ghost';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';

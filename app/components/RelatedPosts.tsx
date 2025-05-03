@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/ghost';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PostOrPage, Tag } from '@tryghost/content-api';
