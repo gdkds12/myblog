@@ -24,15 +24,15 @@ const DarkModeToggle = () => {
     return (
         <button
             onClick={toggleDarkMode}
-            className="relative rounded-full w-14 h-7 focus:outline-none border border-gray-300 dark:border-gray-600 transition-colors duration-300 focus:ring-0 focus:ring-offset-0 focus:shadow-none" // focus 스타일 재정의
+            className="relative flex items-center justify-between rounded-full w-14 h-7 p-1 border border-gray-300 dark:border-gray-600 transition-colors duration-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none"
         >
             <div
-                className={`absolute top-[2px] left-[2px] bg-gray-200 dark:bg-gray-700 opacity-70 rounded-full w-[24px] h-[24px] transition-transform duration-300 ${
-                    theme === 'dark' ? 'transform translate-x-7' : ''
+                className={`absolute top-1 left-1 bottom-1 my-auto bg-white/50 dark:bg-gray-600/50 rounded-full w-[20px] h-[20px] transition-transform duration-300 ${
+                    theme === 'dark' ? 'transform translate-x-[28px]' : ''
                 }`}
             />
-            <SunIcon className="absolute left-1.5 top-1.5 h-4 w-4 text-gray-800 dark:text-gray-200 stroke-2" />
-            <MoonIcon className="absolute right-1.5 top-1.5 h-4 w-4 text-gray-800 dark:text-gray-200 stroke-2" />
+            <SunIcon className={`h-4 w-4 stroke-2 transition-colors ${theme === 'light' ? 'text-yellow-500' : 'text-gray-500'}`} />
+            <MoonIcon className={`h-4 w-4 stroke-2 transition-colors ${theme === 'dark' ? 'text-blue-400' : 'text-gray-500'}`} />
         </button>
     );
 };
