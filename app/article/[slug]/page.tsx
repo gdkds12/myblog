@@ -1,7 +1,6 @@
 // app/article/[slug]/page.tsx
 "use client";
 import { useState, useEffect } from 'react';
-import api from '@/lib/ghost';
 import { useParams } from 'next/navigation';
 import { PostOrPage } from "@tryghost/content-api";
 import DarkModeToggle from '../../components/DarkModeToggle';
@@ -52,7 +51,7 @@ export default function Article() {
                 document.title = fetchedPost.title || 'Blog Post';
 
                 const headings = fetchedPost.html?.match(/<h2.*?>(.*?)<\/h2>/g) || [];
-                const tocItems = headings.map((heading) => {
+                const tocItems = headings.map((heading: string) => {
                     const text = heading.replace(/<[^>]+>/g, '');
                     const id = text.toLowerCase().replace(/\s+/g, '-');
                     return { id, text };
