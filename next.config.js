@@ -20,6 +20,8 @@ const nextConfig = {
       return config;
   },
   reactStrictMode: true,
+  // Docker 배포를 위한 설정 추가
+  output: 'standalone',
 };
 
 module.exports = nextConfig;

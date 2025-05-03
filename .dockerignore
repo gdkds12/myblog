@@ -1,0 +1,40 @@
+# 개발 환경 파일
+.git
+.github
+.vscode
+.next
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# 환경 변수 파일
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 빌드 파일
+out
+dist
+build
+.DS_Store
+*.pem
+
+# 테스트 및 문서 파일
+coverage
+*.md
+!README.md
+tests
+docs
+
+# 디버그 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 로컬 설정 파일
+.editorconfig
+.prettierrc
+.eslintrc* 
