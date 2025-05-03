@@ -2,9 +2,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/ghost';
 import Image from 'next/image';
-import { Author, PostOrPage } from '@tryghost/content-api';
+import { Author } from '@tryghost/content-api';
 import { useTheme } from 'next-themes';
 
 interface EditorInfoProps {
@@ -16,12 +15,6 @@ interface AuthorWithSlug extends Omit<Author, 'slug'> {
   slug?: string;
 }
 
-// PostOrPage 인터페이스를 확장하되 authors 속성의 타입을 명시적으로 지정합니다.
-interface PostWithAuthors extends PostOrPage {
-    authors?: (Author & { slug?: string; })[] | undefined;
-}
-
-
 const EditorInfo: React.FC<EditorInfoProps> = ({ authorIds }) => {
   const [author, setAuthor] = useState<AuthorWithSlug | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +25,7 @@ const EditorInfo: React.FC<EditorInfoProps> = ({ authorIds }) => {
   useEffect(() => {
     const fetchAuthor = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         if (!authorIds || authorIds.length === 0) {
           setAuthor(null);
@@ -39,16 +33,33 @@ const EditorInfo: React.FC<EditorInfoProps> = ({ authorIds }) => {
           return;
         }
 
-        // 첫 번째 저자만 가져오도록 수정
         const firstAuthorId = authorIds[0];
-        const fetchedAuthor = await api.authors.read({ id: firstAuthorId });
-           
-        setAuthor(fetchedAuthor);
+        // API Route 호출로 변경
+        const response = await fetch(`/api/authors/read/${firstAuthorId}`);
+        if (!response.ok) {
+             // 404 포함 에러 처리
+             const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+             console.error(`Error fetching author ${firstAuthorId}: ${response.status}`, errorData);
+             setError(`Failed to load editor info: ${response.statusText}`);
+             setAuthor(null);
+             setIsLoading(false);
+             return;
+        }
+        const fetchedAuthor = await response.json();
+
+        // API가 빈 객체를 반환할 수 있으므로 확인
+        if (fetchedAuthor && Object.keys(fetchedAuthor).length > 0) {
+             setAuthor(fetchedAuthor);
+        } else {
+            setAuthor(null); // 작성자 정보 없음
+            console.warn(`Author not found or empty response for ID: ${firstAuthorId}`);
+        }
 
         setIsLoading(false);
       } catch (error: any) {
         console.error('Error fetching author:', error);
         setError("Failed to load editor info.");
+        setAuthor(null);
         setIsLoading(false);
       }
     };

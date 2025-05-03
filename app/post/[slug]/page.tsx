@@ -2,7 +2,6 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
-import api from '@/lib/ghost';
 import { useParams } from 'next/navigation';
 import { PostOrPage, Tag } from "@tryghost/content-api";
 import DarkModeToggle from '../../components/DarkModeToggle';
@@ -36,15 +35,22 @@ export default function Post() {
     useEffect(() => {
         async function fetchPost() {
             try {
-                const fetchedPost = await api.posts.read(
-                    { slug },
-                    { include: ['tags', 'authors'], filter: 'tag:-article' }
-                );
+                const response = await fetch(`/api/posts/read/${slug}?include=tags,authors&filter=tag:-article`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.error('Post not found');
+                        setPost(null);
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchedPost = await response.json();
+
                 setPost(fetchedPost);
                 document.title = fetchedPost.title || 'Blog Post';
 
                 const headings = fetchedPost.html?.match(/<h2.*?>(.*?)<\/h2>/g) || [];
-                const tocItems = headings.map((heading) => {
+                const tocItems = headings.map((heading: string) => {
                     const text = heading.replace(/<[^>]+>/g, '');
                     const id = text.toLowerCase().replace(/\s+/g, '-');
                     return { id, text };
@@ -120,9 +126,10 @@ export default function Post() {
                          <Image
                             src={src}
                             alt={alt || 'image'}
-                            width={800}
-                            height={500}
-                            className="cursor-pointer"
+                            width={0}
+                            height={0}
+                            sizes="100vw"
+                            className="cursor-pointer w-full h-auto"
                             onClick={() => handleImageClick(src, alt)}
                          />
                     )
@@ -167,16 +174,15 @@ export default function Post() {
             <div className="fixed top-4 right-4 z-50">
                 <DarkModeToggle />
             </div>
-          <main className="flex-grow mx-auto py-0 w-full flex flex-col items-start lg:items-start">
+          <main className="flex-grow mx-auto py-0 w-full flex flex-col items-center">
              {!post ? (
                 <div>Loading...</div>
                 ) : (
-                    <div className="flex w-full px-4 sm:px-0 lg:px-8 lg:max-w-[1200px] mx-auto lg:flex-row">
-                        <div className="lg:w-[75%]">
+                    <div className="w-full max-w-3xl mx-auto sm:px-4 overflow-x-hidden">
                            <Card className="w-full bg-transparent border-none shadow-none p-0 ">
                                 <PostHeader title={postTitle} tags={postTags.map(tag => ({id: tag.id, name: tag.name || ''}))} featureImage={postFeatureImage} />
                                 <CardContent>
-                                    <div id="post-content" className="prose dark:prose-invert max-w-none">
+                                    <div id="post-content" className="prose dark:prose-invert overflow-x-hidden">
                                         {renderContent(post.html || '')}
                                     </div>
                                 </CardContent>
@@ -184,13 +190,6 @@ export default function Post() {
                             <div className="mt-8">
                                 <RelatedPosts currentPostTags={postTags} currentPostSlug={slug} />
                             </div>
-                             <div className="lg:hidden relative mt-8">
-                               <TableOfContents toc={toc} />
-                            </div>
-                         </div>
-                         <div className="hidden lg:block lg:w-[25%] lg:mt-0 ml-0">
-                           <TableOfContents toc={toc} />
-                         </div>
                     </div>
                 )}
             </main>

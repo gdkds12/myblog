@@ -25,10 +25,24 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
     }
   }, [code]);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true); // 복사 상태를 true로 설정
-    setTimeout(() => setCopied(false), 2000); // 2초 후에 다시 false로 설정
+  const copyToClipboard = async () => {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+      console.error('클립보드 API를 사용할 수 없습니다.');
+      // 사용자에게 알림 추가 (예: alert 또는 토스트 메시지)
+      alert('클립보드 복사 기능을 사용할 수 없는 환경입니다.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('클립보드 복사 실패:', err);
+      // 사용자에게 알림 추가
+      alert('클립보드 복사에 실패했습니다.');
+      setCopied(false); // 실패 시 copied 상태 초기화
+    }
   };
 
   return (

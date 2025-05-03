@@ -37,27 +37,33 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentPostTags, currentPos
                     return;
                 }
 
-                const tagSlugs = currentPostTags.map(tag => tag.slug).filter(slug => slug !== undefined);
+                const tagSlugs = currentPostTags.map(tag => tag.slug).filter(slug => slug !== undefined && slug !== null);
 
-                 const fetchedPosts = await api.posts.browse({
-                    limit: 6,
-                    include: ['tags', 'authors'],
-                    filter: `tag:[${tagSlugs.join(',')}]`,
-                    order: 'published_at DESC',
-                  });
+                if (tagSlugs.length === 0) {
+                    setRelatedPosts([]);
+                    setIsLoading(false);
+                    return;
+                }
 
-                  const postsWithTags = fetchedPosts.map(post => ({
+                const apiUrl = `/api/posts/browse?limit=6&include=tags,authors&filter=tag:[${encodeURIComponent(tagSlugs.join(','))}]&order=published_at%20DESC`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchedPosts = await response.json();
+
+                  const postsWithTags = fetchedPosts.map((post: PostOrPage) => ({
                       ...post,
-                      tags: post.tags?.map(tag => ({
+                      tags: post.tags?.map((tag: Tag) => ({
                         ...tag,
                         slug: tag.slug
                       }))
                     }));
                 // 현재 게시물 제외
-                const filteredPosts = postsWithTags.filter(post => post.slug !== currentPostSlug);
+                const filteredPosts = postsWithTags.filter((post: PostWithTags) => post.slug !== currentPostSlug);
                 // "blog" 태그가 있는 게시물만 포함
-                 const blogPosts = filteredPosts.filter(post =>
-                  post.tags?.some(tag => tag.slug === 'blog')
+                 const blogPosts = filteredPosts.filter((post: PostWithTags) =>
+                  post.tags?.some((tag: Tag) => tag.slug === 'blog')
                 );
 
 

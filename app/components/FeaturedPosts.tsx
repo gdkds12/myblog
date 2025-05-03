@@ -16,37 +16,13 @@ interface PostWithTags extends PostOrPage {
     tags?: TagWithSlug[];
 }
 
-export default function FeaturedPosts() {
-  const [featuredPosts, setFeaturedPosts] = useState<PostWithTags[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface FeaturedPostsProps {
+  featuredPosts: PostWithTags[];
+}
 
-  useEffect(() => {
-    api.posts
-      .browse({
-        limit: 3,
-        include: ['tags', 'authors'],
-        order: 'published_at DESC',
-         filter: 'tags:[main]' // main 태그가 있는 게시물만 가져오도록 수정
-      })
-      .then((fetchedPosts) => {
-          const postsWithTags = fetchedPosts.map(post => ({
-              ...post,
-               tags: post.tags?.map(tag => ({
-                    ...tag,
-                    slug: tag.slug
-                }))
-            }));
-          setFeaturedPosts(postsWithTags);
-           setIsLoading(false);
-        })
-      .catch((err) => {
-        console.error(err);
-        setIsLoading(false);
-      });
-  }, []);
-
-  if (isLoading) {
-    return <div>Loading featured posts...</div>;
+export default function FeaturedPosts({ featuredPosts }: FeaturedPostsProps) {
+  if (!featuredPosts || featuredPosts.length === 0) {
+      return null;
   }
 
   return (
@@ -59,7 +35,7 @@ export default function FeaturedPosts() {
             aspect-[8/5] relative overflow-hidden group
           `}
         >
-          <Link href={`/post/${post.slug}`} className="block h-full"> {/* 변경 부분 */}
+          <Link href={`/post/${post.slug}`} className="block h-full">
             {post.feature_image && (
               <div className="absolute inset-0">
                 <Image

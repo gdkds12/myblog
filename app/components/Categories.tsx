@@ -1,34 +1,14 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import api from '@/lib/ghost';
-import { useEffect, useState } from 'react';
 import { Tag } from "@tryghost/content-api";
 
-export default function Categories() {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface CategoriesProps {
+  tags: Tag[];
+}
+
+export default function Categories({ tags }: CategoriesProps) {
   const pathname = usePathname();
-
-  useEffect(() => {
-    api.tags
-      .browse({limit: 'all'})
-      .then((fetchedTags) => {
-        const filteredTags = fetchedTags.filter(tag => 
-          ['coding', 'ai', 'graphic'].includes(tag.slug)
-        );
-        setTags(filteredTags);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setIsLoading(false);
-      });
-  }, []);
-
-  if (isLoading) {
-    return <nav className="flex space-x-6"><p>Loading categories...</p></nav>;
-  }
 
   return (
     <nav className="flex space-x-6">

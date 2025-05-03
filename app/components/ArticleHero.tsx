@@ -2,7 +2,6 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import api from '@/lib/ghost';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,14 +21,16 @@ const ArticleHero = ({ theme }: ArticleHeroProps) => {
     useEffect(() => {
         const fetchPosts = async () => {
             setIsLoading(true);
+            setError(null); // 에러 상태 초기화
             try {
-                const posts = await api.posts.browse({
-                    limit: 5,
-                    include: ['tags', 'authors'],
-                    order: 'published_at DESC',
-                    filter: 'tags:[atikeul]' // 태그 슬러그로 필터링
-                });
-                 posts.forEach(post => {
+                // API Route 호출로 변경
+                const response = await fetch('/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[atikeul]');
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const posts = await response.json();
+
+                 posts.forEach((post: PostOrPage) => {
                     console.log(`Post title: ${post.title}`);
                     if (post.tags && post.tags.length > 0) {
                         console.log(`  Tags:`, post.tags);

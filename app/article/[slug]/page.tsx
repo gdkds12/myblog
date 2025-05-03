@@ -20,6 +20,7 @@ import EditorInfo from '../../components/EditorInfo';
 import Image from 'next/image'; // Import Image from next/image
 import { Dialog, DialogContent, DialogOverlay } from "../../components/dialog"; // Import dialog components
 import { X } from 'lucide-react'; // Import close icon
+import Script from 'next/script'; // Script import 추가
 
 export default function Article() {
     const [post, setPost] = useState<PostOrPage | null>(null);
@@ -29,14 +30,24 @@ export default function Article() {
     const { theme } = useTheme();
     const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string | undefined } | null>(null);
+    const [isMathJaxReady, setIsMathJaxReady] = useState(false); // isMathJaxReady 상태 추가
 
     useEffect(() => {
         async function fetchPost() {
             try {
-                const fetchedPost = await api.posts.read(
-                    { slug },
-                    { include: ['tags', 'authors'], filter: 'tag:article' }
-                );
+                // API Route 호출로 변경
+                const response = await fetch(`/api/posts/read/${slug}?include=tags,authors&filter=tag:article`);
+                 if (!response.ok) {
+                    // 404 에러 처리 등 추가 가능
+                    if (response.status === 404) {
+                        console.error('Article not found');
+                        setPost(null); // 혹은 에러 상태 설정
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchedPost = await response.json();
+
                 setPost(fetchedPost);
                 document.title = fetchedPost.title || 'Blog Post';
 
@@ -54,6 +65,16 @@ export default function Article() {
 
         fetchPost();
     }, [slug]);
+
+    // MathJax 렌더링 useEffect 추가
+    useEffect(() => {
+        if (post && isMathJaxReady && typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+            console.log("Attempting to typeset MathJax...");
+            (window as any).MathJax.typesetPromise()
+                .then(() => console.log("MathJax typesetting complete."))
+                .catch((err: any) => console.error('MathJax typesetting failed:', err));
+        }
+    }, [post, isMathJaxReady]);
 
     const handleImageClick = (src: string, alt: string | undefined) => {
         setSelectedImage({ src, alt });
@@ -110,9 +131,10 @@ export default function Article() {
                          <Image
                             src={src}
                             alt={alt || 'image'}
-                            width={800} // Adjust as necessary
-                            height={500} // Adjust as necessary
-                            className="cursor-pointer"
+                            width={0} // 반응형 처리
+                            height={0} // 반응형 처리
+                            sizes="100vw" // 반응형 처리
+                            className="cursor-pointer w-full h-auto" // 반응형 처리
                             onClick={() => handleImageClick(src, alt)}
                          />
                     )
@@ -134,6 +156,30 @@ export default function Article() {
 
     return (
         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
+            {/* MathJax 스크립트 추가 */}
+            <Script id="mathjax-config">
+                {`
+                  MathJax = {
+                    tex: {
+                      inlineMath: [['$', '$'], ['\\(', '\\)']],
+                      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                    },
+                    svg: {
+                      fontCache: 'global'
+                    }
+                  };
+                `}
+            </Script>
+            <Script
+              id="mathjax-script"
+              async
+              src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+              onReady={() => {
+                console.log("MathJax script ready.");
+                setIsMathJaxReady(true);
+              }}
+             />
+
             <ScrollProgressBar />
             <Header />
             <div className="fixed top-4 right-4 z-50">
@@ -143,7 +189,7 @@ export default function Article() {
                 {!post ? (
                     <div>Loading...</div>
                 ) : (
-                   <div className="w-full px-4 sm:px-0 lg:px-8 mx-auto max-w-[800px]">
+                   <div className="w-full max-w-[800px] mx-auto sm:px-4 overflow-x-hidden">
                          <div className="pt-24"> {/* pt-8을 pt-24로 변경 */}
                             <ArticlePostHeader
                                 title={postTitle}

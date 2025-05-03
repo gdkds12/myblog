@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/ghost';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PostOrPage, Tag } from '@tryghost/content-api';
@@ -30,6 +29,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ currentPostTags, curr
     useEffect(() => {
         const fetchRelatedPosts = async () => {
             setIsLoading(true);
+            setError(null);
             try {
                 if (!currentPostTags || currentPostTags.length === 0) {
                     setRelatedPosts([]);
@@ -37,27 +37,31 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ currentPostTags, curr
                     return;
                 }
 
-                const tagSlugs = currentPostTags.map(tag => tag.slug).filter(slug => slug !== undefined);
+                const tagSlugs = currentPostTags.map((tag: Tag) => tag.slug).filter((slug): slug is string => slug !== undefined && slug !== null);
 
-                 const fetchedPosts = await api.posts.browse({
-                    limit: 6,
-                    include: ['tags', 'authors'],
-                    filter: `tag:[${tagSlugs.join(',')}]`,
-                    order: 'published_at DESC',
-                  });
+                if (tagSlugs.length === 0) {
+                    setRelatedPosts([]);
+                    setIsLoading(false);
+                    return;
+                }
 
-                  const postsWithTags = fetchedPosts.map(post => ({
+                const apiUrl = `/api/posts/browse?limit=6&include=tags,authors&filter=tag:[${encodeURIComponent(tagSlugs.join(','))}]&order=published_at%20DESC`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchedPosts = await response.json();
+
+                  const postsWithTags = fetchedPosts.map((post: PostOrPage) => ({
                       ...post,
-                      tags: post.tags?.map(tag => ({
+                      tags: post.tags?.map((tag: Tag) => ({
                         ...tag,
                         slug: tag.slug
                       }))
                     }));
-                // 현재 게시물 제외
-                const filteredPosts = postsWithTags.filter(post => post.slug !== currentPostSlug);
-                // "artikeul" 태그가 있는 게시물만 포함
-                const articlePosts = filteredPosts.filter(post =>
-                  post.tags?.some(tag => tag.slug === 'atikeul')
+                const filteredPosts = postsWithTags.filter((post: PostWithTags) => post.slug !== currentPostSlug);
+                const articlePosts = filteredPosts.filter((post: PostWithTags) =>
+                  post.tags?.some((tag: Tag) => tag.slug === 'article')
                 );
 
                 setRelatedPosts(articlePosts);

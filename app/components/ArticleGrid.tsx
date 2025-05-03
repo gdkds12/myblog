@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/ghost';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PostOrPage, Tag } from '@tryghost/content-api';
@@ -27,20 +26,22 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
     useEffect(() => {
         const fetchPosts = async () => {
             setIsLoading(true);
+            setError(null);
             try {
-                const fetchedPosts = await api.posts.browse({
-                    limit: 8,
-                    include: ['tags', 'authors'],
-                    order: 'published_at DESC'
-                });
-                const postsWithTags = fetchedPosts.map(post => ({
+                const response = await fetch('/api/posts/browse?limit=8&include=tags,authors&order=published_at%20DESC');
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchedPosts = await response.json();
+
+                const postsWithTags = fetchedPosts.map((post: PostOrPage) => ({
                     ...post,
-                    tags: post.tags?.map(tag => ({
+                    tags: post.tags?.map((tag: Tag) => ({
                         ...tag,
                          slug: tag.slug
                     }))
                 }));
-                setPosts(postsWithTags.filter(post => post.tags?.some(tag => tag.slug === 'atikeul')));
+                setPosts(postsWithTags.filter((post: PostWithTags) => post.tags?.some((tag: Tag) => tag.slug === 'article')));
                 setIsLoading(false);
             } catch (error: any) {
                 console.error('Error fetching posts:', error);
@@ -96,10 +97,7 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                                 <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200">
                                     {post.title}
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-400 line-clamp-2 mb-3 flex-1">
-                                    {post.excerpt}
-                                </p>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 mt-auto">{formattedDate}</span> {/* mt-auto 추가하여 날짜를 아래로 */} 
                             </div>
                         </div>
                     </Link>
