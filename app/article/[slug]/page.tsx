@@ -193,7 +193,7 @@ export default function Article() {
                             <ArticlePostHeader
                                 title={postTitle}
                                 tags={postTags.map(tag => ({
-                                    id: tag.id,
+                                    id: String(tag.id),
                                     name: tag.name || '' // name이 undefined일 경우 빈 문자열로 대체
                                 }))}
                                 date={postDate}
@@ -207,7 +207,7 @@ export default function Article() {
                                 </div>
                             </CardContent>
                         </Card>
-                         <EditorInfo authorIds={post.authors?.map(author => author.id)} />
+                         <EditorInfo authorIds={post.authors?.map(author => String(author.id))} />
                         <RelatedArticles currentPostTags={post.tags || []} currentPostSlug={slug} />
                     </div>
                 )}
