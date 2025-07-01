@@ -6,6 +6,11 @@ WORKDIR /app
 COPY package*.json* pnpm-lock.yaml* yarn.lock* ./
 RUN npm ci --ignore-scripts
 
+ARG STRAPI_URL
+ARG NEXT_PUBLIC_CMS_URL
+ENV STRAPI_URL=${STRAPI_URL}
+ENV NEXT_PUBLIC_CMS_URL=${NEXT_PUBLIC_CMS_URL}
+
 # ---- Builder ----
 FROM node:24-alpine AS builder
 WORKDIR /app

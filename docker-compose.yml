@@ -1,6 +1,10 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        STRAPI_URL: https://grounded-rainbow-3b0e27f8c5.strapiapp.com
+        NEXT_PUBLIC_CMS_URL: https://grounded-rainbow-3b0e27f8c5.strapiapp.com
     container_name: myblog
     restart: unless-stopped
     depends_on:
