@@ -3,6 +3,12 @@
 # 빌드 단계
 FROM node:20-alpine AS builder
 
+# Build-time arguments for CMS URL
+ARG STRAPI_URL
+ARG NEXT_PUBLIC_CMS_URL
+ENV STRAPI_URL=$STRAPI_URL \
+    NEXT_PUBLIC_CMS_URL=$NEXT_PUBLIC_CMS_URL
+
 # 작업 디렉토리 설정
 WORKDIR /app
 
@@ -20,6 +26,12 @@ RUN npm run build
 
 # 런타임 단계
 FROM node:20-alpine AS runner
+
+# Runtime arguments (populated at build time)
+ARG STRAPI_URL
+ARG NEXT_PUBLIC_CMS_URL
+ENV STRAPI_URL=$STRAPI_URL \
+    NEXT_PUBLIC_CMS_URL=$NEXT_PUBLIC_CMS_URL
 
 WORKDIR /app
 
