@@ -207,7 +207,7 @@ export default function Article() {
                                 </div>
                             </CardContent>
                         </Card>
-                         <EditorInfo authorIds={post.authors?.map(author => String(author.id))} />
+                         <EditorInfo authorIds={post.authors?.map((author: any) => String(author.id))} />
                         <RelatedArticles currentPostTags={post.tags || []} currentPostSlug={slug} />
                     </div>
                 )}

@@ -25,6 +25,7 @@ export interface PostOrPage {
   tags?: Tag[];
   published_at?: string;
   primary_author?: Author | null;
+  authors?: Author[];
 }
 
 // Alias for convenience
