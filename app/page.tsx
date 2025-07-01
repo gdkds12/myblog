@@ -4,66 +4,25 @@ import DarkModeToggle from './components/DarkModeToggle';
 import FeaturedPosts from './components/FeaturedPosts';
 import AdditionalPosts from './components/AdditionalPosts';
 import Footer from './components/Footer';
-import { PostOrPage, Tag } from "@tryghost/content-api";
-
-interface TagWithSlug extends Tag {
-    slug: string;
-}
-interface PostWithTags extends PostOrPage {
-    tags?: TagWithSlug[];
-}
-
-async function getFeaturedPosts(): Promise<PostWithTags[]> {
-  try {
-    const res = await fetch(`${process.env.APP_URL}/api/posts/browse?limit=3&include=tags,authors&order=published_at%20DESC&filter=tags:[main]`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch featured posts: ${res.status}`);
-    const data = await res.json();
-    return data.map((post: PostOrPage) => ({
-        ...post,
-         tags: post.tags?.map((tag: Tag) => ({ ...tag, slug: tag.slug }))
-      }));
-  } catch (error) {
-    console.error("Error in getFeaturedPosts:", error);
-    return [];
-  }
-}
-
-async function getAdditionalPosts(): Promise<PostWithTags[]> {
-   try {
-    const res = await fetch(`${process.env.APP_URL}/api/posts/browse?limit=6&include=tags,authors`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch additional posts: ${res.status}`);
-    const data = await res.json();
-     const postsWithTags = data.map((post: PostOrPage) => ({
-        ...post,
-        tags: post.tags?.map((tag: Tag) => ({ ...tag, slug: tag.slug }))
-      }));
-     return postsWithTags.filter((post: PostWithTags) => !post.tags?.some((tag: Tag) => tag.slug === 'article'));
-  } catch (error) {
-    console.error("Error in getAdditionalPosts:", error);
-    return [];
-  }
-}
-
-async function getCategoriesTags(): Promise<Tag[]> {
-  try {
-    const res = await fetch(`${process.env.APP_URL}/api/tags/browse?limit=all`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`);
-    const data = await res.json();
-    return data.filter((tag: Tag) =>
-      ['coding', 'ai', 'graphic'].includes(tag.slug)
-    );
-  } catch (error) {
-    console.error("Error in getCategoriesTags:", error);
-    return [];
-  }
-}
+import { getPosts, getTags } from '@/lib/strapi';
 
 export default async function Home() {
-  const [featuredPostsData, additionalPostsData, categoriesTagsData] = await Promise.all([
-    getFeaturedPosts(),
-    getAdditionalPosts(),
-    getCategoriesTags()
+  // 1. fetch posts & tags in parallel
+  const [posts, tags] = await Promise.all([
+    getPosts({ start: 0, limit: 20 }), // 가져올 만큼 넉넉히
+    getTags('all'),
   ]);
+
+  // 2. Featured: 태그(main) 포함 상위 3개
+  const featuredPosts = posts.slice(0, 3);
+
+  // 3. Additional: article 태그를 제외한 상위 6개
+  const additionalPosts = posts.slice(3, 9);
+
+  // 4. 카테고리용 태그 필터
+  const categoryTags = tags.filter((t: any) =>
+    ['coding', 'ai', 'graphic'].includes(t.slug)
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -71,11 +30,11 @@ export default async function Home() {
       <main className="flex-grow py-6">
         <div className="max-w-full md:max-w-[70%] mx-auto px-4">
           <div className="flex justify-between items-center mb-6">
-            <Categories tags={categoriesTagsData} />
+            <Categories tags={categoryTags} />
             <DarkModeToggle />
           </div>
-          <FeaturedPosts featuredPosts={featuredPostsData} />
-          <AdditionalPosts posts={additionalPostsData} />
+          <FeaturedPosts featuredPosts={featuredPosts} />
+          <AdditionalPosts posts={additionalPosts} />
         </div>
       </main>
       <Footer />

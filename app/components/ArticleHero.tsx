@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { PostOrPage } from "@tryghost/content-api";
+import { PostOrPage } from "@/lib/types";
 
 interface ArticleHeroProps {
   theme: string;

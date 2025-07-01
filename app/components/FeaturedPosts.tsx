@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PostOrPage, Tag } from "@tryghost/content-api";
+import { PostOrPage, Tag } from "@/lib/types";
 
 interface TagWithSlug extends Tag {
     slug: string;

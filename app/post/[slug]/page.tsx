@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { useParams } from 'next/navigation';
-import { PostOrPage, Tag } from "@tryghost/content-api";
+import { PostOrPage, Tag } from "@/lib/types";
 import DarkModeToggle from '../../components/DarkModeToggle';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -180,7 +180,7 @@ export default function Post() {
                 ) : (
                     <div className="w-full max-w-3xl mx-auto sm:px-4 overflow-x-hidden">
                            <Card className="w-full bg-transparent border-none shadow-none p-0 ">
-                                <PostHeader title={postTitle} tags={postTags.map(tag => ({id: tag.id, name: tag.name || ''}))} featureImage={postFeatureImage} />
+                                <PostHeader title={postTitle} tags={postTags.map(tag => ({ id: String(tag.id), name: tag.name || '' }))} featureImage={postFeatureImage} />
                                 <CardContent>
                                     <div id="post-content" className="prose dark:prose-invert overflow-x-hidden">
                                         {renderContent(post.html || '')}

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { PostOrPage } from "@tryghost/content-api";
+import { PostOrPage } from "@/lib/types";
 
 export default function PostContent({ post }: { post: PostOrPage }) {
   return (

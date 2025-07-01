@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PostOrPage } from "@tryghost/content-api";
+import { PostOrPage } from "@/lib/types";
 import DarkModeToggle from '../../components/DarkModeToggle';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';

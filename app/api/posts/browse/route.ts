@@ -9,8 +9,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = Number(searchParams.get('limit') ?? '10');
   const page = Number(searchParams.get('page') ?? '1');
+  const tagSlug = searchParams.get('tag'); // optional tag filter
   const start = (page - 1) * limit;
-  const cacheKey = `strapi:posts:browse:${start}:${limit}`;
+  const cacheKey = `strapi:posts:browse:${start}:${limit}:${tagSlug ?? 'all'}`;
 
 
 
@@ -33,7 +34,10 @@ export async function GET(request: Request) {
 
    // 2. 캐시 없으면 Strapi 호출
    try {
-     const postsArray = await getPosts({ start, limit });
+     let postsArray = await getPosts({ start, limit });
+      if (tagSlug) {
+        postsArray = postsArray.filter((post: any) => post.tags?.some((t: any) => t.slug === tagSlug));
+      }
      // 3. Redis에 저장 (posts 배열만 저장)
      if (redis) {
        try {

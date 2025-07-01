@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Tag } from "@tryghost/content-api";
+import { Tag } from "@/lib/types";
 
 interface CategoriesProps {
   tags: Tag[];

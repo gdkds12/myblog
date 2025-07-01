@@ -7,6 +7,11 @@ if (!STRAPI_URL) {
   throw new Error('STRAPI_URL (or NEXT_PUBLIC_CMS_URL) env variable is not defined');
 }
 
+// Common headers for authenticated requests
+const AUTH_HEADERS: Record<string, string> = process.env.STRAPI_TOKEN ? {
+  Authorization: `Bearer ${process.env.STRAPI_TOKEN}`,
+} : {};
+
 
 
 /*
@@ -27,17 +32,27 @@ const toGhostLikeAuthor = (author: any) => ({
 });
 
 export const toGhostLikePost = (item: any) => {
-  const { id, attributes } = item;
+  // Strapi may return nested {attributes} or flat fields depending on response style
+  const id = item.id;
+  const attrs = item.attributes ?? item;
   return {
     id,
-    slug: attributes.slug,
-    title: attributes.title,
-    html: attributes.content, // assuming richtext/markdown already converted; adjust as needed
-    feature_image: attributes.cover?.data?.attributes?.url ?? null,
-    excerpt: attributes.excerpt,
-    tags: attributes.tags?.data?.map(toGhostLikeTag) ?? [],
-    published_at: attributes.publishedAt,
-    primary_author: attributes.author?.data ? toGhostLikeAuthor(attributes.author.data) : null,
+    slug: attrs.slug,
+    title: attrs.title,
+    html: attrs.content ?? attrs.description ?? '',
+    feature_image: (() => {
+      const url =
+        attrs.cover?.data?.attributes?.url ??
+        attrs.cover_url ??
+        attrs.cover?.url ??
+        null;
+      if (!url) return null;
+      return url.startsWith('http') ? url : `${STRAPI_URL}${url}`;
+    })(),
+    excerpt: attrs.excerpt ?? attrs.description ?? '',
+    tags: (attrs.tags?.data ?? attrs.tags ?? []).map(toGhostLikeTag),
+    published_at: attrs.publishedAt ?? attrs.published_at,
+    primary_author: attrs.author?.data ? toGhostLikeAuthor(attrs.author.data) : null,
   };
 };
 
@@ -47,18 +62,20 @@ export const toGhostLikePost = (item: any) => {
 
 export async function getPosts({ start = 0, limit = 10 } = {}) {
   // Build REST query string
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[getPosts] STRAPI_URL', STRAPI_URL);
+  }
   const queryString = qs.stringify(
     {
       pagination: { start, limit },
-      sort: ['publishedAt:desc'],
-      populate: ['cover', 'tags', 'author', 'author.avatar'],
+      sort: 'publishedAt:desc',
+      populate: '*',
     },
     { encodeValuesOnly: true }
   );
 
   const res = await fetch(`${STRAPI_URL}/api/articles?${queryString}`, {
     headers: {
-      'Content-Type': 'application/json',
       ...AUTH_HEADERS,
     },
   });
@@ -68,22 +85,51 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
   }
 
   const json = await res.json();
+  if ((json.data ?? []).length === 0) {
+    console.log('[getPosts] raw json', JSON.stringify(json).slice(0,500));
+  }
   const items = json.data ?? [];
+  console.log('[getPosts] total:', items.length);   // ← 추가
   return items.map(toGhostLikePost);
+}
+
+export async function getTags(limit: number | 'all' = 'all') {
+  const queryObj: any = { sort: 'name:asc' };
+  if (limit !== 'all') {
+    queryObj.pagination = { limit };
+  }
+  const queryString = qs.stringify(queryObj, { encodeValuesOnly: true });
+  const res = await fetch(`${STRAPI_URL}/api/tags?${queryString}`, {
+    headers: {
+      ...AUTH_HEADERS,
+    },
+    next: { revalidate: 300 },
+  });
+  if (res.status === 404) {
+    // Tags collection not found – return empty list instead of crashing the page
+    return [];
+  }
+  if (!res.ok) throw new Error(`Strapi REST error: ${res.status}`);
+  const json = await res.json();
+  return (json.data ?? []).map((item: any) => ({
+    id: item.id,
+    name: item.attributes?.name,
+    slug: item.attributes?.slug,
+    description: item.attributes?.description ?? null,
+  }));
 }
 
 export async function getPostBySlug(slug: string) {
   const queryString = qs.stringify(
     {
       filters: { slug: { $eq: slug } },
-      populate: ['cover', 'tags', 'author', 'author.avatar'],
+      populate: '*',
     },
     { encodeValuesOnly: true }
   );
 
   const res = await fetch(`${STRAPI_URL}/api/articles?${queryString}`, {
     headers: {
-      'Content-Type': 'application/json',
       ...AUTH_HEADERS,
     },
   });
@@ -96,17 +142,5 @@ export async function getPostBySlug(slug: string) {
   const item = json.data?.[0];
   return item ? toGhostLikePost(item) : null;
 }
-            content
-            publishedAt
-            cover { data {  url } } }
-            tags { data { id  name  } } }
-            author { data { id  username name  avatar { data {  url } } } } } }
-          }
-        }
-      }
-    }
-  `;
-  
-  
-  return item ? toGhostLikePost(item) : null;
-}
+
+

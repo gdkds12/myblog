@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Author } from '@tryghost/content-api';
+import { Author } from '@/lib/types';
 import { useTheme } from 'next-themes';
 
 interface EditorInfoProps {
