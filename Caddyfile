@@ -1,0 +1,10 @@
+{
+  email gdkds12@gmail.com
+}
+
+greedient.kr, www.greedient.kr {
+  @www host www.greedient.kr
+  redir @www https://greedient.kr{uri} permanent
+  reverse_proxy web:3000
+  encode gzip
+}

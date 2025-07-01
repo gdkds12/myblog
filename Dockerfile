@@ -1,60 +1,29 @@
-# Next.js 앱을 위한 Dockerfile
-
-# 빌드 단계
-FROM node:20-alpine AS builder
-
-# Build-time arguments for CMS URL
-ARG STRAPI_URL
-ARG NEXT_PUBLIC_CMS_URL
-ENV STRAPI_URL=$STRAPI_URL \
-    NEXT_PUBLIC_CMS_URL=$NEXT_PUBLIC_CMS_URL
-
-# 작업 디렉토리 설정
+# syntax=docker/dockerfile:1
+# ---- Dependencies ----
+FROM node:24-alpine AS deps
 WORKDIR /app
+# Install dependencies based on the preferred lock-file
+COPY package*.json* pnpm-lock.yaml* yarn.lock* ./
+RUN npm ci --ignore-scripts
 
-# 패키지 파일 복사
-COPY package.json package-lock.json ./
-
-# 의존성 설치
-RUN npm ci
-
-# 소스 코드 복사
+# ---- Builder ----
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Build the Next.js application
+RUN npm run build && npm prune --production
 
-# Next.js 애플리케이션 빌드
-RUN npm run build
-
-# 런타임 단계
-FROM node:20-alpine AS runner
-
-# Runtime arguments (populated at build time)
-ARG STRAPI_URL
-ARG NEXT_PUBLIC_CMS_URL
-ENV STRAPI_URL=$STRAPI_URL \
-    NEXT_PUBLIC_CMS_URL=$NEXT_PUBLIC_CMS_URL
-
+# ---- Production ----
+FROM node:24-alpine AS runner
 WORKDIR /app
-
-# 환경 변수 설정
 ENV NODE_ENV=production
 
-# 비루트 사용자로 실행하기 위한 설정
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# 빌드 결과물만 복사
+# Copy only the necessary files from the builder stage
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
-# 권한 변경
-RUN chown -R nextjs:nodejs /app
-
-# 사용자 전환
-USER nextjs
-
-# 포트 노출
 EXPOSE 3000
-
-# 애플리케이션 실행
-CMD ["node", "server.js"] 
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]
