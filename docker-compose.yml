@@ -1,0 +1,88 @@
+version: "3.9"
+
+###############
+#   NETWORKS  #
+###############
+networks:
+  proxy_net:
+    external: true   # 이미 생성된 외부 네트워크 (caddy ↔ 서비스 프록시용)
+
+###############
+#   VOLUMES   #
+###############
+volumes:
+  caddy_data:
+  caddy_config:
+  redis_data:
+
+###############
+#  SERVICES   #
+###############
+services:
+  # Next.js 블로그 애플리케이션
+  myblog:
+    build:
+      context: .                # 현재(myblog) 디렉토리의 Dockerfile 사용
+      args:
+        # 빌드 단계에서 사용하는 CMS URL
+        STRAPI_URL: ${STRAPI_URL}
+        NEXT_PUBLIC_CMS_URL: ${NEXT_PUBLIC_CMS_URL:-${STRAPI_URL}}
+    container_name: myblog
+    restart: unless-stopped
+
+    # 런타임 환경 변수 (.env.local 파일에 정의)
+    env_file:
+      - ./.env.local
+    environment:
+      - PORT=3000               # Next.js 내부 포트
+
+    expose:
+      - "3000"                  # 호스트 ↔ 컨테이너 직접 포트 매핑 없이 Caddy만 접근
+
+    depends_on:
+      - redis
+    networks:
+      - proxy_net
+
+  # Redis (옵션: 캐싱용)
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+    networks:
+      - proxy_net
+
+  # Caddy 리버스 프록시 + TLS
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    # Let's Encrypt 스테이징을 사용하려면 아래 환경변수를 유지하세요.
+    # 운영에서는 주석 처리해 실제 인증서를 발급받으세요.
+    environment:
+      - ACME_CA=https://acme-staging-v02.api.letsencrypt.org/directory
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - myblog
+    networks:
+      - proxy_net
