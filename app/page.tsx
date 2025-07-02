@@ -1,8 +1,6 @@
 import Header from './components/Header';
-import Categories from './components/Categories';
-import DarkModeToggle from './components/DarkModeToggle';
-import FeaturedPosts from './components/FeaturedPosts';
-import AdditionalPosts from './components/AdditionalPosts';
+import BlogHome from './components/BlogHome';
+import type { Tag } from '@/lib/types';
 import Footer from './components/Footer';
 import { getPosts, getTags } from '@/lib/strapi';
 
@@ -13,28 +11,28 @@ export default async function Home() {
     getTags('all'),
   ]);
 
-  // 2. Featured: 태그(main) 포함 상위 3개
-  const featuredPosts = posts.slice(0, 3);
 
-  // 3. Additional: article 태그를 제외한 상위 6개
-  const additionalPosts = posts.slice(3, 9);
-
-  // 4. 카테고리용 태그 필터
-  const categoryTags = tags.filter((t: any) =>
-    ['coding', 'ai', 'graphic'].includes(t.slug)
-  );
+    // 4. 카테고리: 우선 Strapi에서 가져온 태그(또는 카테고리)를 사용하고,
+  // 비어 있으면 포스트에 포함된 태그를 추출해 대체합니다.
+  let categoryTags: Tag[] = tags;
+  if (categoryTags.length === 0) {
+    const tagMap = new Map<string, Tag>();
+    posts.forEach((post: any) => {
+      (post.tags ?? []).forEach((tag: any) => {
+        if (tag && tag.slug) {
+          tagMap.set(tag.slug, tag as Tag);
+        }
+      });
+    });
+    categoryTags = Array.from(tagMap.values()).filter((t) => t.name);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow py-6">
         <div className="max-w-full md:max-w-[70%] mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <Categories tags={categoryTags} />
-            <DarkModeToggle />
-          </div>
-          <FeaturedPosts featuredPosts={featuredPosts} />
-          <AdditionalPosts posts={additionalPosts} />
+          <BlogHome posts={posts} tags={categoryTags} />
         </div>
       </main>
       <Footer />

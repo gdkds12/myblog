@@ -20,8 +20,8 @@ const AUTH_HEADERS: Record<string, string> = process.env.STRAPI_TOKEN ? {
 
 const toGhostLikeTag = (tag: any) => ({
   id: tag.id,
-  name: tag.attributes?.name,
-  slug: tag.attributes?.slug,
+  name: tag.attributes?.name ?? tag.name,
+  slug: tag.attributes?.slug ?? tag.slug,
 });
 
 const toGhostLikeAuthor = (author: any) => ({
@@ -50,7 +50,15 @@ export const toGhostLikePost = (item: any) => {
       return url.startsWith('http') ? url : `${STRAPI_URL}${url}`;
     })(),
     excerpt: attrs.excerpt ?? attrs.description ?? '',
-    tags: (attrs.tags?.data ?? attrs.tags ?? []).map(toGhostLikeTag),
+    tags: (() => {
+      const arr = (attrs.tags?.data ?? attrs.tags ?? []).map(toGhostLikeTag);
+      if (arr.length === 0 && attrs.category) {
+        // Fallback: use single category as tag-like object
+        const cat = attrs.category?.data ?? attrs.category;
+        if (cat) arr.push(toGhostLikeTag(cat));
+      }
+      return arr;
+    })(),
     published_at: attrs.publishedAt ?? attrs.published_at,
     primary_author: attrs.author?.data ? toGhostLikeAuthor(attrs.author.data) : null,
   };

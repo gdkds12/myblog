@@ -1,47 +1,70 @@
 "use client";
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import { useEffect, useRef } from 'react';
 import { Tag } from "@/lib/types";
 
 interface CategoriesProps {
   tags: Tag[];
+  selectedSlug: string | null;
+  onSelect: (slug: string | null) => void;
 }
 
-export default function Categories({ tags }: CategoriesProps) {
-  const pathname = usePathname();
+export default function Categories({ tags, selectedSlug, onSelect }: CategoriesProps) {
+  const underlineRef = useRef<HTMLSpanElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 위치 업데이트 함수
+  useEffect(() => {
+    const active = containerRef.current?.querySelector<HTMLButtonElement>(
+      selectedSlug === null ? '[data-slug="all"]' : `[data-slug="${selectedSlug}"]`
+    );
+    if (active && underlineRef.current && containerRef.current) {
+      const rect = active.getBoundingClientRect();
+      const parentRect = containerRef.current.getBoundingClientRect();
+      underlineRef.current.style.width = `${rect.width}px`;
+      underlineRef.current.style.transform = `translateX(${rect.left - parentRect.left}px)`;
+    }
+  }, [selectedSlug]);
 
   return (
-    <nav className="flex space-x-6">
-      <CategoryLink href="/" currentPath={pathname}>
+    <nav ref={containerRef} className="relative flex space-x-6">
+      {/* animated underline */}
+      <span
+        ref={underlineRef}
+        className="absolute -bottom-0.5 h-0.5 bg-black dark:bg-white transition-all duration-300 ease-in-out"
+        style={{ transform: 'translateX(0)', width: 0 }}
+      />
+      <CategoryButton
+        active={selectedSlug === null}
+        onClick={() => onSelect(null)}
+        dataSlug="all">
         모든 글
-      </CategoryLink>
+      </CategoryButton>
       {tags.map((tag) => (
-        <CategoryLink key={tag.id} href={`/tag/${tag.slug}`} currentPath={pathname}>
+        <CategoryButton
+          key={tag.id}
+          active={selectedSlug === tag.slug}
+          onClick={() => onSelect(tag.slug!)}
+          dataSlug={tag.slug || ''}
+        >
           {tag.name}
-        </CategoryLink>
+        </CategoryButton>
       ))}
     </nav>
   );
 }
 
-function CategoryLink({ href, currentPath, children }: { href: string; currentPath: string; children: React.ReactNode }) {
-  const isActive = currentPath === href || (href !== '/' && currentPath.startsWith(href));
-  
+function CategoryButton({ active, onClick, children, dataSlug }: { active: boolean; onClick: () => void; children: React.ReactNode; dataSlug: string }) {
   return (
-    <Link 
-      href={href} 
-      className={`
-        font-medium text-gray-700 dark:text-gray-300 
-        hover:text-black dark:hover:text-white 
-        transition-all duration-300 ease-in-out
-        ${isActive ? 'text-black dark:text-white font-semibold relative' : ''}
-      `}
+    <button
+      type="button" data-slug={dataSlug}
+      onClick={onClick}
+      className={clsx(
+        'font-medium text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-all duration-300 ease-in-out',
+        active && 'text-black dark:text-white font-semibold relative'
+      )}
     >
-      <span className={`
-        ${isActive ? 'box-decoration-clone bg-left-bottom bg-gradient-to-r from-black to-black dark:from-white dark:to-white bg-no-repeat pb-1 px-1' : ''}
-      `} style={{ backgroundSize: isActive ? '100% 2px' : '0 2px' }}>
-        {children}
-      </span>
-    </Link>
+      <span className="pb-0.5">{children}</span>
+    </button>
   );
 }
