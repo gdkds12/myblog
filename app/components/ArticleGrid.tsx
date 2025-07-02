@@ -41,7 +41,10 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                          slug: tag.slug
                     }))
                 }));
-                setPosts(postsWithTags.filter((post: PostWithTags) => post.tags?.some((tag: Tag) => tag.slug === 'article')));
+                setPosts(postsWithTags.filter((post: PostWithTags) => {
+                    const slugs = post.tags?.map((t: Tag) => t.slug) || [];
+                    return slugs.includes('article');
+                }));
                 setIsLoading(false);
             } catch (error: any) {
                 console.error('Error fetching posts:', error);

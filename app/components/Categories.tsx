@@ -10,6 +10,8 @@ interface CategoriesProps {
 }
 
 export default function Categories({ tags, selectedSlug, onSelect }: CategoriesProps) {
+  // 'article'과 'main' 태그는 카테고리 목록에서 표시하지 않습니다.
+  const visibleTags = tags.filter((t) => t.slug !== 'article' && t.slug !== 'main');
   const underlineRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +42,7 @@ export default function Categories({ tags, selectedSlug, onSelect }: CategoriesP
         dataSlug="all">
         모든 글
       </CategoryButton>
-      {tags.map((tag) => (
+      {visibleTags.map((tag) => (
         <CategoryButton
           key={tag.id}
           active={selectedSlug === tag.slug}

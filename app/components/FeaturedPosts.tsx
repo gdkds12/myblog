@@ -19,6 +19,7 @@ interface FeaturedPostsProps {
   featuredPosts: PostWithTags[];
 }
 
+
 export default function FeaturedPosts({ featuredPosts }: FeaturedPostsProps) {
   if (!featuredPosts || featuredPosts.length === 0) {
       return null;

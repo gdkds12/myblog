@@ -16,10 +16,16 @@ export default function BlogHome({ posts, tags }: Props) {
 
   const [isAppearing, setIsAppearing] = useState(true);
 
-  const filteredPosts = useMemo(() => {
-    if (!selectedSlug) return posts;
-    return posts.filter((p) => p.tags?.some((t) => t.slug === selectedSlug));
-  }, [posts, selectedSlug]);
+  // 블로그 태그와 메인 태그별로 미리 분리
+  const mainPosts = useMemo(() => posts.filter((p) => p.tags?.some((t) => t.slug === 'main')), [posts]);
+  const blogPosts = useMemo(() => posts.filter((p) => p.tags?.some((t) => t.slug === 'blog')), [posts]);
+
+  const additionalPool = useMemo(() => {
+    if (selectedSlug) {
+      return blogPosts.filter((p) => p.tags?.some((t) => t.slug === selectedSlug));
+    }
+    return blogPosts;
+  }, [blogPosts, selectedSlug]);
 
   // 새 필터 결과가 마운트될 때만 페이드-인
   useEffect(() => {
@@ -28,8 +34,8 @@ export default function BlogHome({ posts, tags }: Props) {
     return () => clearTimeout(id);
   }, [selectedSlug]);
 
-  const featuredPosts = filteredPosts.slice(0, 3);
-  const additionalPosts = filteredPosts.slice(3, 9);
+  const featuredPosts = mainPosts.slice(0, 3);
+  const additionalPosts = additionalPool.slice(0, 9);
 
   return (
     <>
