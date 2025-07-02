@@ -1,159 +1,119 @@
 // app/components/ArticleHero.tsx
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { PostOrPage } from "@/lib/types";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { PostOrPage } from "@/lib/types";
 
 interface ArticleHeroProps {
-  theme: string;
+  theme?: string;
 }
 
-const ArticleHero = ({ theme }: ArticleHeroProps) => {
-    const [featuredPosts, setFeaturedPosts] = useState<PostOrPage[]>([]);
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export default function ArticleHero({ theme }: ArticleHeroProps) {
+  const [posts, setPosts] = useState<PostOrPage[]>([]);
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            setIsLoading(true);
-            setError(null); // 에러 상태 초기화
-            try {
-                // API Route 호출로 변경, 필터를 article로 수정
-                const response = await fetch('/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[article]');
-                if (!response.ok) {
-                  throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const posts = await response.json();
-
-                 posts.forEach((post: PostOrPage) => {
-                    console.log(`Post title: ${post.title}`);
-                    if (post.tags && post.tags.length > 0) {
-                        console.log(`  Tags:`, post.tags);
-                        post.tags.forEach(tag => {
-                            console.log(`   - Tag Name: ${tag.name}, Slug: ${tag.slug}`);
-                        })
-                    } else {
-                      console.log(`  No tags found for this post.`);
-                    }
-                  });
-                setFeaturedPosts(posts);
-                setIsLoading(false);
-            } catch (error: any) {
-                console.error('Error fetching posts:', error);
-                setError("Failed to load featured posts.");
-                setIsLoading(false);
-            }
-        };
-
-        fetchPosts();
-    }, []);
-
-     const handlePrevSlide = () => {
-        setCurrentSlide((prevSlide) => (prevSlide === 0 ? featuredPosts.length - 1 : prevSlide - 1));
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(
+          "/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[article]"
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setPosts(data);
+      } catch (e: any) {
+        setError(e.message ?? "Failed to fetch posts");
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    const handleNextSlide = () => {
-        setCurrentSlide((prevSlide) => (prevSlide === featuredPosts.length - 1 ? 0 : prevSlide + 1));
-    };
-    
-    if (isLoading) {
-      return <div className="text-lg">Loading featured posts...</div>;
-    }
 
-    if (error) {
-      return <div className="text-lg text-red-500">{error}</div>;
-    }
+    fetchPosts();
+  }, []);
 
-    if (!featuredPosts || featuredPosts.length === 0) {
-      return <div className="text-lg">No featured posts found.</div>
-    }
+  if (loading) return <div className="text-lg">Loading featured posts...</div>;
+  if (error) return <div className="text-lg text-red-500">{error}</div>;
+  if (posts.length === 0) return <div className="text-lg">No featured posts found.</div>;
 
-    const currentPost = featuredPosts[currentSlide];
-    const formattedDate = currentPost.published_at
-    ? new Date(currentPost.published_at).toLocaleDateString('en-CA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).replace(/\//g, '-')
-    : '날짜 정보 없음';
+  const post = posts[index];
+  const formattedDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).replace(/\//g, "-")
+    : "";
+
+  const prev = () => setIndex((i) => (i === 0 ? posts.length - 1 : i - 1));
+  const next = () => setIndex((i) => (i === posts.length - 1 ? 0 : i + 1));
 
   return (
     <div className="relative">
-        {/* 21:9 비율 컨테이너 및 배경 추가 */}
-        <div className="aspect-[21/9] overflow-hidden rounded-lg flex bg-gray-100 dark:bg-[#1b1b1b] p-10">
-            {/* 카드 컨테이너 */}
-             <div className="flex items-center justify-center relative h-full -mr-2" style={{ width: '420px' }}>
-                 <Link href={`/article/${currentPost.slug}`} className="block group relative"> {/* 변경된 부분 */}
-                    <div className={`bg-blue-500 dark:bg-blue-700 text-white dark:text-gray-100 h-[420px] w-[420px] rounded-xl overflow-hidden`}>
-                        <div className="relative w-full h-full">
-                           {currentPost.feature_image && (
-                                <Image
-                                    src={currentPost.feature_image}
-                                    alt={currentPost.title || ''}
-                                    width={420}
-                                    height={420}
-                                    className="object-cover transition-transform duration-200 group-hover:scale-105"
-                                    unoptimized
-                                />
-                            )}
-                            <div className="absolute inset-0 bg-black/20" /> {/* 오버레이 불투명도 조정 */}
-                        </div>
-                    </div>
-                </Link>
+      <div className="aspect-[21/9] overflow-hidden rounded-lg flex bg-gray-100 dark:bg-[#1b1b1b] p-10">
+        {/* left image card */}
+        <Link
+          href={`/article/${post.slug}`}
+          className="relative group h-full w-[420px] flex-shrink-0 rounded-xl overflow-hidden"
+        >
+          {post.feature_image && (
+            <>
+              <Image
+                src={post.feature_image}
+                alt={post.title || ""}
+                fill
+                className="object-cover transition-transform duration-200 group-hover:scale-105"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-black/30" />
+            </>
+          )}
+        </Link>
+
+        {/* right content */}
+        <div className="flex flex-col justify-between ml-10 flex-1">
+          {/* controls */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-2">
+              {posts.map((_, i) => (
+                <button
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${
+                    i === index ? "bg-gray-500" : "bg-gray-400/50 dark:bg-gray-500/50"
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                  onClick={() => setIndex(i)}
+                />
+              ))}
             </div>
-            {/* 내용과 슬라이드 컨트롤 컨테이너 */}
-            <div className="w-1/2 flex flex-col justify-between relative">
-                
-                <div className="pl-8 mt-4">
-                  {/* 슬라이드 컨트롤 */}
-                  <div className="flex items-center justify-between w-full mb-8"> {/* 슬라이드 컨트롤 간격 조정 */}
-                      <div className="flex items-center space-x-2 mr-4">
-                          {[...Array(featuredPosts.length)].map((_, index) => (
-                              <button
-                                  key={index}
-                                  className={`w-2 h-2 rounded-full ${
-                                  index === currentSlide ? 'bg-gray-500' : 'bg-gray-500/50 dark:bg-gray-500 dark:bg-opacity-50'
-                                  }`}
-                                  aria-label={`Go to slide ${index + 1}`}
-                                  onClick={(e) => {
-                                      e.stopPropagation(); // 이벤트 전파 방지
-                                  }}
-                              />
-                          ))}
-                      </div>
-                      <div className="flex items-center space-x-4">
-                          <button aria-label="Previous slide" onClick={handlePrevSlide}>
-                              <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                          </button>
-                          <button aria-label="Next slide" onClick={handleNextSlide}>
-                              <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                          </button>
-                      </div>
-                  </div>
-                  <div className="group">
-                      <Link href={`/article/${currentPost.slug}`} className="block">
-                       <div className="flex flex-col items-start transition-colors duration-200 group-hover:text-blue-500 dark:group-hover:text-blue-400" style={{ lineHeight: '1.7' }}>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 mb-5">Article</span>
-                                <h2 className="text-4xl font-semibold mb-7">
-                                    {currentPost.title}
-                                </h2>
-                           <p className="text-base text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                              {currentPost.excerpt}
-                            </p>
-                           <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
-                         </div>
-                      </Link>
-                 </div>
-                </div>
+            <div className="flex items-center space-x-4">
+              <button aria-label="Previous slide" onClick={prev}>
+                <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+              <button aria-label="Next slide" onClick={next}>
+                <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
+          </div>
+
+          <Link href={`/article/${post.slug}`} className="group">
+            <span className="text-sm text-gray-500 dark:text-gray-400 mb-5">Article</span>
+            <h2 className="text-4xl font-semibold mb-4 transition-colors duration-200 group-hover:text-blue-500 dark:group-hover:text-blue-400">
+              {post.title}
+            </h2>
+            {post.excerpt && (
+              <p className="text-base text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                {post.excerpt}
+              </p>
+            )}
+            <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
+          </Link>
         </div>
+      </div>
     </div>
   );
-};
-
-export default ArticleHero;
+}

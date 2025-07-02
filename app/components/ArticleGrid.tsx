@@ -79,8 +79,9 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                     <Link
                         key={post.id}
                         href={`/article/${post.slug}`}
-                        className="group relative flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+                        className="group"
                     >
+                      <article className="relative flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                         <div className="relative aspect-square overflow-hidden rounded-xl">
                             {post.feature_image && (
                                 <Image
@@ -100,7 +101,8 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
                                 <span className="text-xs text-gray-500 dark:text-gray-400 mt-auto">{formattedDate}</span> {/* mt-auto 추가하여 날짜를 아래로 */} 
                             </div>
                         </div>
-                    </Link>
+                    </article>
+                      </Link>
                 );
             })}
         </div>
