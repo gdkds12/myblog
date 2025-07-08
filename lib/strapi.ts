@@ -172,7 +172,7 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
             // map and merge
             const mapped = changed.map(toGhostLikePost);
             const byId = new Map<any, any>(cached.map((p:any) => [p.id, p]));
-            mapped.forEach(p => byId.set(p.id, p));
+            mapped.forEach((p: any) => byId.set(p.id, p));
             const merged = Array.from(byId.values()).sort((a:any,b:any)=>new Date(b.published_at||b.publishedAt).getTime()-new Date(a.published_at||a.publishedAt).getTime()).slice(0, limit);
             const redis = getRedis();
             await redis.set(listKey, JSON.stringify(merged));
