@@ -11,7 +11,7 @@ interface CategoriesProps {
 
 export default function Categories({ tags, selectedSlug, onSelect }: CategoriesProps) {
   // 'article'과 'main' 태그는 카테고리 목록에서 표시하지 않습니다.
-  const visibleTags = tags.filter((t) => t.slug !== 'article' && t.slug !== 'main');
+  const visibleTags = tags.filter((t) => !['article','blog','main'].includes(t.slug ?? ''));
   const underlineRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

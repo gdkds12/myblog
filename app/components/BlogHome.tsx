@@ -65,7 +65,9 @@ export default function BlogHome({ posts, tags }: Props) {
         <DarkModeToggle />
       </div>
       <div className={`transition-opacity duration-300 ${isAppearing ? 'opacity-0' : 'opacity-100'}`}>
-        <FeaturedPosts featuredPosts={featuredPosts as any} />
+        {!selectedSlug && (
+          <FeaturedPosts featuredPosts={featuredPosts as any} />
+        )}
         <AdditionalPosts posts={additionalPosts as any} />
       </div>
     </>

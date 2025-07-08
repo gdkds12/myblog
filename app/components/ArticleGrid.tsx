@@ -8,22 +8,24 @@ import { PostOrPage, Tag } from '@/lib/types';
 
 interface ArticleGridProps {
     theme: string;
+    initialPosts?: PostWithTags[];
 }
 
 interface TagWithSlug extends Tag {
-    slug: string;
+    slug?: string;
 }
 
 interface PostWithTags extends PostOrPage {
     tags?: TagWithSlug[];
 }
 
-const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
-    const [posts, setPosts] = useState<PostWithTags[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+const ArticleGrid: React.FC<ArticleGridProps> = ({ theme, initialPosts }) => {
+    const [posts, setPosts] = useState<PostWithTags[]>(initialPosts ?? []);
+    const [isLoading, setIsLoading] = useState(!initialPosts);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (initialPosts && initialPosts.length > 0) return;
         const fetchPosts = async () => {
             setIsLoading(true);
             setError(null);
@@ -54,10 +56,10 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme }) => {
         };
 
         fetchPosts();
-    }, []);
+    }, [initialPosts]);
 
     if (isLoading) {
-        return <div className="text-lg">Loading articles...</div>;
+        return <div className="h-24" />;
     }
 
     if (error) {

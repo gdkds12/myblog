@@ -148,15 +148,19 @@ export default function Post() {
          <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
             <Script id="mathjax-config">
                 {`
-                  MathJax = {
-                    tex: {
-                      inlineMath: [['$', '$'], ['\\(', '\\)']],
-                      displayMath: [['$$', '$$'], ['\\[', '\\]']]
-                    },
-                    svg: {
-                      fontCache: 'global'
-                    }
-                  };
+                   MathJax = {
+                     tex: {
+                       inlineMath: [['\\(', '\\)']],
+                       displayMath: [['\\[', '\\]']]
+                     },
+                     options: {
+                       processHtmlClass: 'math-zone',
+                       ignoreHtmlClass: '.*'
+                     },
+                     svg: {
+                       fontCache: 'global'
+                     }
+                   };
                 `}
             </Script>
             <Script
@@ -176,7 +180,7 @@ export default function Post() {
             </div>
           <main className="flex-grow mx-auto py-0 w-full flex flex-col items-center">
              {!post ? (
-                <div>Loading...</div>
+                <div className="h-32" />
                 ) : (
                     <div className="w-full max-w-3xl mx-auto sm:px-4 overflow-x-hidden">
                            <Card className="w-full bg-transparent border-none shadow-none p-0 ">

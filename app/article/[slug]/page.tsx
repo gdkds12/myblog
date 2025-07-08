@@ -158,15 +158,19 @@ export default function Article() {
             {/* MathJax 스크립트 추가 */}
             <Script id="mathjax-config">
                 {`
-                  MathJax = {
-                    tex: {
-                      inlineMath: [['$', '$'], ['\\(', '\\)']],
-                      displayMath: [['$$', '$$'], ['\\[', '\\]']]
-                    },
-                    svg: {
-                      fontCache: 'global'
-                    }
-                  };
+                   MathJax = {
+                     tex: {
+                       inlineMath: [['\\(', '\\)']],
+                       displayMath: [['\\[', '\\]']]
+                     },
+                     options: {
+                       processHtmlClass: 'math-zone',
+                       ignoreHtmlClass: '.*'
+                     },
+                     svg: {
+                       fontCache: 'global'
+                     }
+                   };
                 `}
             </Script>
             <Script
@@ -186,7 +190,7 @@ export default function Article() {
             </div>
              <main className="flex-grow mx-auto py-0 w-full flex justify-center">
                 {!post ? (
-                    <div>Loading...</div>
+                    <div className="h-32" />
                 ) : (
                    <div className="w-full max-w-[800px] mx-auto sm:px-4 overflow-x-hidden">
                          <div className="pt-24"> {/* pt-8을 pt-24로 변경 */}

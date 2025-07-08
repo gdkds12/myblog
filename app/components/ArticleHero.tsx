@@ -9,23 +9,28 @@ import type { PostOrPage } from "@/lib/types";
 
 interface ArticleHeroProps {
   theme?: string;
+  initialPosts?: PostOrPage[];
 }
 
-export default function ArticleHero({ theme }: ArticleHeroProps) {
-  const [posts, setPosts] = useState<PostOrPage[]>([]);
+export default function ArticleHero({ theme, initialPosts }: ArticleHeroProps) {
+  const [posts, setPosts] = useState<PostOrPage[]>(initialPosts ?? []);
   const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialPosts);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialPosts && initialPosts.length > 0) return;
     const fetchPosts = async () => {
       try {
         const res = await fetch(
-          "/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC&filter=tags:[article]"
+          "/api/posts/browse?limit=5&include=tags,authors&order=published_at%20DESC"
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setPosts(data);
+        const filteredPosts = (data as PostOrPage[]).filter((post: PostOrPage) =>
+          (post.tags ?? []).some((t) => t.slug === "article")
+        );
+        setPosts(filteredPosts);
       } catch (e: any) {
         setError(e.message ?? "Failed to fetch posts");
       } finally {
@@ -34,9 +39,9 @@ export default function ArticleHero({ theme }: ArticleHeroProps) {
     };
 
     fetchPosts();
-  }, []);
+  }, [initialPosts]);
 
-  if (loading) return <div className="text-lg">Loading featured posts...</div>;
+  if (loading) return <div className="h-24" />;
   if (error) return <div className="text-lg text-red-500">{error}</div>;
   if (posts.length === 0) return <div className="text-lg">No featured posts found.</div>;
 
@@ -58,7 +63,7 @@ export default function ArticleHero({ theme }: ArticleHeroProps) {
         {/* left image card */}
         <Link
           href={`/article/${post.slug}`}
-          className="relative group h-full w-[420px] flex-shrink-0 rounded-xl overflow-hidden"
+          className="relative group aspect-square w-[420px] flex-shrink-0 rounded-xl overflow-hidden"
         >
           {post.feature_image && (
             <>
@@ -69,13 +74,13 @@ export default function ArticleHero({ theme }: ArticleHeroProps) {
                 className="object-cover transition-transform duration-200 group-hover:scale-105"
                 unoptimized
               />
-              <div className="absolute inset-0 bg-black/30" />
+              
             </>
           )}
         </Link>
 
         {/* right content */}
-        <div className="flex flex-col justify-between ml-10 flex-1">
+        <div className="flex flex-col gap-6 ml-10 flex-1">
           {/* controls */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-2">

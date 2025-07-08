@@ -1,5 +1,7 @@
 // Strapi REST API is used – GraphQL querying removed due to schema mismatch.
 import qs from 'qs';
+import { marked } from 'marked';
+import { getCachedJson, getString, setString, getRedis } from './cache';
 
 const STRAPI_URL = process.env.STRAPI_URL || process.env.NEXT_PUBLIC_CMS_URL;
 
@@ -59,7 +61,57 @@ export const toGhostLikePost = (item: any) => {
     id,
     slug: derivedSlug,
     title: attrs.title,
-    html: attrs.content ?? attrs.description ?? '',
+    html: (() => {
+      let extracted = '';
+      const c = attrs.content;
+      if (typeof c === 'string') extracted = c;
+      else if (c && typeof c === 'object') {
+        if (typeof c.html === 'string') extracted = c.html;
+        else if (typeof c.data === 'string') extracted = c.data;
+        else if (typeof c.value === 'string') extracted = c.value;
+      }
+      if (!extracted) {
+        // try various direct fields
+        extracted =
+          attrs.html ??
+          attrs.body ??
+          attrs.content_html ??
+          attrs.contentHtml ??
+          attrs.contents ??
+          attrs.markdown ??
+          attrs.description ??
+          '';
+      }
+      if (!extracted && Array.isArray(attrs.blocks)) {
+        const parts: string[] = [];
+        for (const blk of attrs.blocks) {
+          if (typeof blk === 'string') parts.push(blk);
+          else if (blk) {
+            if (typeof blk.html === 'string') parts.push(blk.html);
+            else if (typeof blk.body === 'string') parts.push(blk.body);
+            else if (typeof blk.content === 'string') parts.push(blk.content);
+            else if (typeof blk.text === 'string') parts.push(blk.text);
+          }
+        }
+        extracted = parts.join('\n');
+      }
+      // If still no HTML tags, attempt Markdown ➜ HTML conversion first
+      if (extracted && !/<[a-z][\s\S]*>/i.test(extracted)) {
+        try {
+          extracted = marked.parse(extracted) as string;
+        } catch (_) {
+          // fallback: basic newline=><br>
+          extracted = extracted
+            .split(/\n{2,}/)
+            .map(p => `<p>${p.replace(/\n/g, '<br />')}</p>`)
+            .join('\n');
+        }
+      }
+      if (!extracted && process.env.NODE_ENV !== 'production') {
+        console.warn('[toGhostLikePost] No html for id', id, 'keys', Object.keys(attrs));
+      }
+      return extracted;
+    })(),
     feature_image: (() => {
       const url =
         attrs.cover?.data?.attributes?.url ??
@@ -95,7 +147,43 @@ export const toGhostLikePost = (item: any) => {
  */
 
 export async function getPosts({ start = 0, limit = 10 } = {}) {
+  let lastFetchedIso = await getString('posts:lastFetched');
   // Build REST query string
+  const listKey = `posts:list:${start}:${limit}`;
+  const lastFetchedKey = 'posts:lastFetched';
+  const cached = await getCachedJson<any[]>(listKey);
+  if (cached) {
+    if (process.env.NODE_ENV !== 'production') console.log('[getPosts] cache hit', listKey, 'len', cached.length);
+    // incremental update check
+    const lastFetchedIso = await getString(lastFetchedKey);
+    let newestIso = lastFetchedIso;
+    try {
+      if (lastFetchedIso) {
+        const incrQuery = qs.stringify({
+          filters: { updatedAt: { $gt: lastFetchedIso } },
+          populate: '*',
+          sort: 'updatedAt:asc',
+        }, { encodeValuesOnly: true });
+        const incrRes = await fetch(`${STRAPI_URL}/api/articles?${incrQuery}`, { headers: { ...AUTH_HEADERS } });
+        if (incrRes.ok) {
+          const incrJson = await incrRes.json();
+          const changed = incrJson.data ?? [];
+          if (changed.length) {
+            // map and merge
+            const mapped = changed.map(toGhostLikePost);
+            const byId = new Map<any, any>(cached.map((p:any) => [p.id, p]));
+            mapped.forEach(p => byId.set(p.id, p));
+            const merged = Array.from(byId.values()).sort((a:any,b:any)=>new Date(b.published_at||b.publishedAt).getTime()-new Date(a.published_at||a.publishedAt).getTime()).slice(0, limit);
+            const redis = getRedis();
+            await redis.set(listKey, JSON.stringify(merged));
+            newestIso = changed[changed.length-1].attributes?.updatedAt || newestIso;
+            return merged;
+          }
+        }
+      }
+    } catch(e){ console.warn('[getPosts] incremental update failed', (e as Error).message);}  
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     console.log('[getPosts] STRAPI_URL', STRAPI_URL);
   }
@@ -123,6 +211,17 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
     console.log('[getPosts] raw json', JSON.stringify(json).slice(0,500));
   }
   const items = json.data ?? [];
+  const normalized = items.map(toGhostLikePost);
+  const redis = getRedis();
+  await redis.set(listKey, JSON.stringify(normalized));
+  // record newest updatedAt
+  const maxUpdated = items.reduce((max:string, it:any)=> {
+    const u = it.attributes?.updatedAt || it.updatedAt || '';
+    return u > max ? u : max;
+  }, lastFetchedIso || '');
+  if (maxUpdated) await setString(lastFetchedKey, maxUpdated);
+
+
   console.log('[getPosts] total:', items.length);   // ← 추가
   return items.map(toGhostLikePost);
 }
