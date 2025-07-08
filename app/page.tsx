@@ -1,4 +1,3 @@
-import Header from './components/Header';
 import BlogHome from './components/BlogHome';
 import type { Tag } from '@/lib/types';
 import Footer from './components/Footer';
@@ -33,8 +32,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow py-6">
+            <main className="flex-grow py-6">
         <div className="max-w-full md:max-w-[70%] mx-auto px-4">
           <BlogHome posts={posts} tags={categoryTags} />
         </div>

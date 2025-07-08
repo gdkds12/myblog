@@ -105,7 +105,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentPostTags, currentPos
                   return (
                       <Link
                           key={post.id}
-                          href={`/blog/${post.slug}`}
+                          href={`/post/${post.slug}`}
                           className="group relative flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
                       >
                           <div className="relative aspect-square overflow-hidden rounded-xl">

@@ -29,7 +29,7 @@ export default function Categories({ tags, selectedSlug, onSelect }: CategoriesP
   }, [selectedSlug]);
 
   return (
-    <nav ref={containerRef} className="relative flex space-x-6">
+    <nav ref={containerRef} className="relative flex space-x-6 -ml-2 md:-ml-4">
       {/* animated underline */}
       <span
         ref={underlineRef}

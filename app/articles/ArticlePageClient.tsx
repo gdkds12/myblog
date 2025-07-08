@@ -1,6 +1,5 @@
 "use client";
 
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 import DarkModeToggle from "../components/DarkModeToggle";
 import { useTheme } from "next-themes";
@@ -19,8 +18,7 @@ export default function ArticlePageClient({ featuredPosts, articlePosts }: Props
 
   return (
     <div className={`min-h-screen bg-white dark:bg-[#121212] flex flex-col`}>
-      <Header />
-      {/* DarkModeToggle outside header */}
+            {/* DarkModeToggle outside header */}
       <div
         className="container mx-auto px-4 flex justify-end mt-6"
         style={{ position: "relative", zIndex: 10 }}

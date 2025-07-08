@@ -46,15 +46,9 @@ export default function Header() {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 transition-all duration-300 z-50 ${
-                isAtTop
-                    ? ""
-                    : isVisible
-                    ? "translate-y-0"
-                    : "-translate-y-full"
-            }`}
+            className={`fixed top-0 left-0 right-0 transition-transform duration-300 z-50 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
         >
-            <div className="py-6">
+            <div className="h-20 flex items-center">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-center">
                         <div className="rounded-full bg-white/30 dark:bg-black/30 backdrop-blur-md px-8 py-3 text-black dark:text-white border border-gray-300 dark:border-gray-700">
