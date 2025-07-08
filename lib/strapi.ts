@@ -35,9 +35,29 @@ export const toGhostLikePost = (item: any) => {
   // Strapi may return nested {attributes} or flat fields depending on response style
   const id = item.id;
   const attrs = item.attributes ?? item;
+  // simple slugify fallback (lowercase, replace spaces/invalid chars with hyphens)
+  const ensureSlug = (value: string) => value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // keep alphanum, space, dash
+    .replace(/\s+/g, '-')         // spaces -> dash
+    .replace(/-+/g, '-')           // collapse multiple dashes
+    .replace(/^-+|-+$/g, '');      // trim leading/trailing dashes
+
+  // Robustly derive slug. Fallback to `post-<id>` when every option yields an empty slug.
+  const derivedSlug = (() => {
+    const candidates = [attrs.slug, attrs.uid, attrs.title].filter(Boolean);
+    for (const cand of candidates) {
+      const slugified = ensureSlug(cand);
+      if (slugified) return slugified;
+    }
+    return `post-${id}`;
+  })();
+
   return {
     id,
-    slug: attrs.slug,
+    slug: derivedSlug,
     title: attrs.title,
     html: attrs.content ?? attrs.description ?? '',
     feature_image: (() => {
@@ -52,10 +72,16 @@ export const toGhostLikePost = (item: any) => {
     excerpt: attrs.excerpt ?? attrs.description ?? '',
     tags: (() => {
       const arr = (attrs.tags?.data ?? attrs.tags ?? []).map(toGhostLikeTag);
-      if (arr.length === 0 && attrs.category) {
-        // Fallback: use single category as tag-like object
-        const cat = attrs.category?.data ?? attrs.category;
-        if (cat) arr.push(toGhostLikeTag(cat));
+      if (arr.length === 0) {
+        const catsSrc = attrs.categories ?? attrs.category;
+        if (catsSrc) {
+          const cats = catsSrc?.data ?? catsSrc;
+          if (Array.isArray(cats)) {
+            cats.forEach((c:any)=>{ if(c) arr.push(toGhostLikeTag(c)); });
+          } else {
+            arr.push(toGhostLikeTag(cats));
+          }
+        }
       }
       return arr;
     })(),
@@ -128,6 +154,24 @@ export async function getTags(limit: number | 'all' = 'all') {
 }
 
 export async function getPostBySlug(slug: string) {
+  // If slug is of the form "post-<id>", try fetching directly by numeric ID.
+  const idMatch = slug.match(/^post-(\d+)$/);
+  if (idMatch) {
+    const id = idMatch[1];
+    const resById = await fetch(`${STRAPI_URL}/api/articles/${id}?populate=*`, {
+      headers: {
+        ...AUTH_HEADERS,
+      },
+    });
+    if (resById.ok) {
+      const jsonById = await resById.json();
+      if (jsonById.data) {
+        return toGhostLikePost(jsonById.data);
+      }
+    }
+    // If fetching by ID fails (e.g., 404), fall-through to slug query below.
+  }
+
   const queryString = qs.stringify(
     {
       filters: { slug: { $eq: slug } },

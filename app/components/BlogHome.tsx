@@ -16,15 +16,30 @@ export default function BlogHome({ posts, tags }: Props) {
 
   const [isAppearing, setIsAppearing] = useState(true);
 
-  // 블로그 태그와 메인 태그별로 미리 분리
-  const mainPosts = useMemo(() => posts.filter((p) => p.tags?.some((t) => t.slug === 'main')), [posts]);
-  const blogPosts = useMemo(() => posts.filter((p) => p.tags?.some((t) => t.slug === 'blog')), [posts]);
+  // 태그별 분류
+  const getSlugs = (p: Post) => {
+    const tagSlugs = (p.tags ?? []).map((t) => (t.slug ?? '').toLowerCase());
+    // category가 tag로 변환되어 있을 수도 있음 (toGhostLikePost에서 처리)
+    return tagSlugs;
+  };
 
-  const additionalPool = useMemo(() => {
+  // Posts explicitly tagged with 'blog'. If none exist, fall back to all posts
+  const blogPosts = useMemo(() => {
+    const filtered = posts.filter((p) => p.slug && getSlugs(p).includes('blog'));
+    return filtered.length > 0 ? filtered : posts;
+  }, [posts]);
+  // Posts for the hero section – tagged with 'main'. If none exist, reuse the latest blogPosts
+  const mainPosts = useMemo(() => {
+    const filtered = posts.filter((p) => p.slug && getSlugs(p).includes('main'));
+    return filtered.length > 0 ? filtered : blogPosts.slice(0, 3);
+  }, [posts, blogPosts]);
+
+  const additionalPosts = useMemo(() => {
+    const base = blogPosts; // already ensured to be non-empty
     if (selectedSlug) {
-      return blogPosts.filter((p) => p.tags?.some((t) => t.slug === selectedSlug));
+      return base.filter((p) => p.tags?.some((t) => t.slug === selectedSlug));
     }
-    return blogPosts;
+    return base;
   }, [blogPosts, selectedSlug]);
 
   // 새 필터 결과가 마운트될 때만 페이드-인
@@ -34,8 +49,10 @@ export default function BlogHome({ posts, tags }: Props) {
     return () => clearTimeout(id);
   }, [selectedSlug]);
 
-  const featuredPosts = mainPosts.slice(0, 3);
-  const additionalPosts = additionalPool.slice(0, 9);
+  console.log('Debug slugs', posts.map(p=>({slug:p.slug, slugs:getSlugs(p)})));
+  console.log('Debug blogPosts', blogPosts.length, blogPosts.map(p=>p.slug));
+  console.log('Debug mainPosts', mainPosts.length, mainPosts.map(p=>p.slug));
+  const featuredPosts = mainPosts; // fallback logic already applied above
 
   return (
     <>
