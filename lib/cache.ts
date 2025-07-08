@@ -15,8 +15,8 @@ const getRedisClient = (() => {
 
     if (!url) {
       // Fallback: return a dummy in-memory cache in dev/test when Redis env is missing.
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[cache] Redis env not set – falling back to in-memory cache');
+      // production build containers may not have Redis, allow graceful fallback
+      console.warn('[cache] Redis env not set – falling back to in-memory cache');
         const mem = new Map<string,string>();
         // minimal interface subset we use (get/set)
         // @ts-ignore – widen type to satisfy callers
@@ -25,8 +25,10 @@ const getRedisClient = (() => {
           set: async (_k:string,_v:string,_mode?:string,_ttl?:number)=> { mem.set(_k,_v); return 'OK'; }
         } as unknown as Redis;
         return client;
+      // if you need strict Redis, set FORCE_REDIS=1
+      if (process.env.FORCE_REDIS === '1') {
+        throw new Error('Redis is not configured. Please set REDIS_URL or REDIS_HOST/REDIS_PORT env variables.');
       }
-      throw new Error('Redis is not configured. Please set REDIS_URL or REDIS_HOST/REDIS_PORT env variables.');
     }
 
     client = new Redis(url, {
