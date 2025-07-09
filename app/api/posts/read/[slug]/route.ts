@@ -43,7 +43,9 @@ export async function GET(
       if (redis) {
         try {
           const browseKeys = await redis.keys('strapi:posts:browse:*');
-          for (const bk of browseKeys) {
+          const listKeys = await redis.keys('posts:list:*');
+          const keysToCheck = [...browseKeys, ...listKeys];
+          for (const bk of keysToCheck) {
             const cached = await redis.get(bk);
             if (!cached) continue;
             const arr = JSON.parse(cached) as any[];
@@ -64,6 +66,12 @@ export async function GET(
     if (redis) {
       try {
         await redis.setex(cacheKey, CACHE_TTL_SECONDS, JSON.stringify(postData));
+        // 목록 관련 캐시 무효화 – 다음 요청에서 최신 데이터 로드
+        const listKeys = await redis.keys('posts:list:*');
+        const browseKeys = await redis.keys('strapi:posts:browse:*');
+        if (listKeys.length || browseKeys.length) {
+          await redis.del(...listKeys, ...browseKeys);
+        }
       } catch (error) {
         console.error('Redis SETEX Error (readPost):', error);
       }
