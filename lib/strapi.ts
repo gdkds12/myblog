@@ -33,6 +33,21 @@ const toGhostLikeAuthor = (author: any) => ({
   profile_image: author?.attributes?.avatar?.data?.attributes?.url || null,
 });
 
+// helper to deduplicate posts array by slug, keeping latest publishedAt
+const dedupeBySlug = (posts: any[]) => {
+  const map = new Map<string, any>();
+  posts.forEach(p => {
+    const existing = map.get(p.slug);
+    if (!existing) map.set(p.slug, p);
+    else {
+      const existingDate = new Date(existing.published_at || existing.publishedAt || 0).getTime();
+      const newDate = new Date(p.published_at || p.publishedAt || 0).getTime();
+      if (newDate >= existingDate) map.set(p.slug, p);
+    }
+  });
+  return Array.from(map.values());
+};
+
 export const toGhostLikePost = (item: any) => {
   // Strapi may return nested {attributes} or flat fields depending on response style
   const id = item.id;
@@ -182,10 +197,10 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
             mapped.forEach((p: any) => byId.set(p.id, p));
             const merged = Array.from(byId.values()).sort((a:any,b:any)=>new Date(b.published_at||b.publishedAt).getTime()-new Date(a.published_at||a.publishedAt).getTime()).slice(0, limit);
             const redis = getRedis();
-            await redis.set(listKey, JSON.stringify(merged));
+            await redis.set(listKey, JSON.stringify(dedupeBySlug(merged)));
             newestIso = changed[changed.length-1].attributes?.updatedAt || newestIso;
             if (newestIso) await setString(lastFetchedKey, newestIso);
-            return merged;
+            return dedupeBySlug(merged);
           }
         }
       }
@@ -219,7 +234,7 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
     console.log('[getPosts] raw json', JSON.stringify(json).slice(0,500));
   }
   const items = json.data ?? [];
-  const normalized = items.map(toGhostLikePost);
+  const normalized = dedupeBySlug(items.map(toGhostLikePost));
   const redis = getRedis();
   await redis.set(listKey, JSON.stringify(normalized));
   // record newest updatedAt
@@ -231,7 +246,7 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
 
 
   console.log('[getPosts] total:', items.length);   // ← 추가
-  return items.map(toGhostLikePost);
+  return normalized;
 }
 
 export async function getTags(limit: number | 'all' = 'all') {
