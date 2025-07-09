@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    domains: ['grounded-rainbow-3b0e27f8c5.strapiapp.com'],
     remotePatterns: [
         {
             protocol: 'http',
@@ -22,6 +23,9 @@ const nextConfig = {
   reactStrictMode: true,
   // Docker 배포를 위한 설정 추가
   output: 'standalone',
+  experimental: {
+    legacyBrowsers: false, // ES6+ only → 레거시 폴리필 제거
+  },
 };
 
 module.exports = nextConfig;
