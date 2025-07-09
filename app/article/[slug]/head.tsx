@@ -34,3 +34,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
+
+// Structured data JSON-LD
+export default async function Head({ params }: Props) {
+  const post = await getPostBySlug(params.slug);
+  if (!post) return null;
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const canonical = `${baseUrl}/article/${post.slug}`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    datePublished: post.published_at || undefined,
+    image: post.feature_image ? [post.feature_image] : undefined,
+    url: canonical,
+    description: post.excerpt || undefined,
+  } as const;
+
+  return (
+    <script
+      key="ld-json"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
