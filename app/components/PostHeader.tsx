@@ -4,6 +4,7 @@
 
 import { useRouter } from 'next/navigation';
 import { CardHeader, CardTitle } from "@/components/ui/card";
+import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import readingTime from 'reading-time';
 
@@ -38,10 +39,14 @@ const PostHeader: React.FC<PostHeaderProps> = ({ title, tags, featureImage }) =>
                 <span className="ml-4">{readingStats}</span>
             </div>
             {featureImage && (
-                <img
+                <Image
                     src={featureImage}
                     alt={title}
+                    width={1200}
+                    height={630}
                     className="w-full h-auto object-cover rounded-lg mt-4"
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    priority
                 />
             )}
         </CardHeader>

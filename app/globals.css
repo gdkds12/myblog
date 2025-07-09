@@ -2,7 +2,7 @@
 @import 'prismjs/themes/prism-tomorrow.css';
 
 /* Pretendard 폰트를 임포트합니다. */
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+/* removed external Pretendard import – using next/font instead */
 
 @tailwind base;
 @tailwind components;
@@ -115,12 +115,7 @@
   /* border: 1px solid #eee; */ /* 디버깅용 테두리 */
 }
 
-/* 다크 모드일 때 MathJax 컨테이너 스타일 (선택 사항) */
-.dark .prose mjx-container[jax="SVG"][display="true"],
-.dark .prose mjx-container[jax="CHTML"][display="true"] {
-  /* background-color: #2a2a2a; */
-  /* border-color: #444; */
-}
+/* 다크 모드 MathJax 컨테이너 스타일은 필요 시 별도 파일에서 정의 */
 
 .prose h1 {
   font-size: 2.2em;
@@ -155,10 +150,7 @@
       box-shadow: none !important;
     }
 
-  body {
-    @apply bg-white dark:bg-darkBg text-gray-900 dark:text-darkText min-h-full font-pretendard;
-    overflow-x: hidden; /* 가로 스크롤 방지 */
-  }
+  /* body 기본 색상은 layout.tsx의 className으로 제어됩니다 */
 }
 
 /* MathJax container overflow for long equations */
