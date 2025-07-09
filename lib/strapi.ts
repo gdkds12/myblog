@@ -153,9 +153,16 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
   const lastFetchedKey = 'posts:lastFetched';
   const cached = await getCachedJson<any[]>(listKey);
   if (cached) {
-    if (process.env.NODE_ENV !== 'production') console.log('[getPosts] cache hit', listKey, 'len', cached.length);
-    // incremental update check
-    const lastFetchedIso = await getString(lastFetchedKey);
+     if (process.env.NODE_ENV !== 'production') console.log('[getPosts] cache hit', listKey, 'len', cached.length);
+     // 30초 이내에 이미 체크했다면 바로 반환
+     if (lastFetchedIso) {
+       const ageMs = Date.now() - new Date(lastFetchedIso).getTime();
+       if (ageMs < 30 * 1000) {
+         return cached;
+       }
+     }
+     // incremental update check
+    lastFetchedIso = await getString(lastFetchedKey);
     let newestIso = lastFetchedIso;
     try {
       if (lastFetchedIso) {
@@ -177,6 +184,7 @@ export async function getPosts({ start = 0, limit = 10 } = {}) {
             const redis = getRedis();
             await redis.set(listKey, JSON.stringify(merged));
             newestIso = changed[changed.length-1].attributes?.updatedAt || newestIso;
+            if (newestIso) await setString(lastFetchedKey, newestIso);
             return merged;
           }
         }

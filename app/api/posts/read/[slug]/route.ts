@@ -3,7 +3,7 @@ import redis from '@/lib/redis';
 import { getPostBySlug } from '@/lib/strapi';
 
 
-const CACHE_TTL_SECONDS = 5 * 60; // 5분 캐시
+const CACHE_TTL_SECONDS = 60 * 60; // 1시간 캐시
 
 export async function GET(
   request: Request,
