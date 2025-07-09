@@ -39,6 +39,25 @@ export async function GET(
   try {
     const postData = await getPostBySlug(slug);
     if (!postData) {
+      // 캐시에 존재하던 삭제된 글 제거
+      if (redis) {
+        try {
+          const browseKeys = await redis.keys('strapi:posts:browse:*');
+          for (const bk of browseKeys) {
+            const cached = await redis.get(bk);
+            if (!cached) continue;
+            const arr = JSON.parse(cached) as any[];
+            const filtered = arr.filter(p => p.slug !== slug);
+            if (filtered.length !== arr.length) {
+              await redis.set(bk, JSON.stringify(filtered));
+            }
+          }
+          // read 캐시도 혹시 모르게 제거
+          await redis.del(cacheKey);
+        } catch (e) {
+          console.error('Purge deleted post cache error:', e);
+        }
+      }
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
     // 3. Redis에 저장
