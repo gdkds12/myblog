@@ -7,6 +7,8 @@ import 'prismjs/components/prism-jsx';
 import 'prismjs/components/prism-tsx';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from 'lucide-react'; // Check 아이콘 추가
 

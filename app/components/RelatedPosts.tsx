@@ -92,8 +92,8 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ currentPostTags, currentPos
     }
 
     return (
-        <div className="mt-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-12 px-4 sm:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedPosts.map((post) => {
                      const formattedDate = post.published_at
                      ? new Date(post.published_at).toLocaleDateString('en-CA', {

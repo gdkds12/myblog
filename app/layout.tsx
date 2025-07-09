@@ -10,6 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="index, follow" />
         <title>Your Blog Title</title>
       </head>
       <body className="bg-white dark:bg-darkBg text-gray-900 dark:text-darkText min-h-full font-pretendard">
