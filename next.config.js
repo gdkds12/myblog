@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['grounded-rainbow-3b0e27f8c5.strapiapp.com'],
+    domains: ['grounded-rainbow-3b0e27f8c5.strapiapp.com', 'res.cloudinary.com'],
     remotePatterns: [
         {
             protocol: 'http',
