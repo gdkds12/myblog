@@ -21,5 +21,6 @@ export default function PostContent({ post }: { post: PostOrPage }) {
       )}
       <div className="prose lg:prose-xl" dangerouslySetInnerHTML={{ __html: post.html || '' }} />
     </article>
+    </>
   );
 }
