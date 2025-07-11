@@ -14,10 +14,7 @@ export default function Header() {
     const lastScrollY = useRef(0);
 
 
-    const logoStyle = {
-        filter: theme === 'light' ? 'invert(1)' : 'none',
-        transition: 'filter 0.3s ease',
-    };
+    
     
      const controlNavbar = useCallback(() => {
         if (typeof window !== 'undefined') {
@@ -55,11 +52,12 @@ export default function Header() {
                             <div className="flex items-center space-x-8">
                                 <Link href="/" className="flex items-center">
                                     <Image
-                                        src="/logo.svg"
+                                        src="/logo.webp"
                                         alt="Logo"
                                         width={24}
                                         height={24}
-                                        style={logoStyle}
+                                        sizes="24px"
+                                        
                                         unoptimized
                                         priority={true}
                                         loading="eager"
