@@ -113,7 +113,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ currentPostTags, curr
                                     alt={post.title || ""}
                                     fill
                                     className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
-                                    unoptimized
+                                   
                                 />
                             )}
                          </div>

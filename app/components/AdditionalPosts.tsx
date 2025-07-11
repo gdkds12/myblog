@@ -38,7 +38,7 @@ export default function AdditionalPosts({ posts }: AdditionalPostsProps) {
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      unoptimized
+                     
                   />
                 )}
               </div>

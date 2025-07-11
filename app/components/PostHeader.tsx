@@ -47,7 +47,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({ title, tags, featureImage }) =>
                     className="w-full h-auto object-cover rounded-lg mt-4"
                     sizes="(max-width: 768px) 100vw, 768px"
                     priority
-                    unoptimized
+                   
                 />
             )}
         </CardHeader>

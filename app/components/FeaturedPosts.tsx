@@ -43,7 +43,7 @@ export default function FeaturedPosts({ featuredPosts }: FeaturedPostsProps) {
                   alt={post.title || ''}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
-                   unoptimized
+                  
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-50" />
               </div>

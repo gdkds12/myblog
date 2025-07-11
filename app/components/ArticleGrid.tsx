@@ -94,7 +94,7 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme, initialPosts }) => {
                                     alt={post.title || ""}
                                     fill
                                     className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
-                                    unoptimized
+                                   
                                 />
                             )}
                         </div>

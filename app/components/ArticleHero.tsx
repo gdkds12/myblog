@@ -72,7 +72,6 @@ export default function ArticleHero({ theme, initialPosts }: ArticleHeroProps) {
                 alt={post.title || ""}
                 fill
                 className="object-cover transition-transform duration-200 group-hover:scale-105"
-                unoptimized
                 priority={index === 0}
                 fetchPriority={index === 0 ? 'high' : undefined}
               />

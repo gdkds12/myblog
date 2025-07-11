@@ -88,7 +88,7 @@ const EditorInfo: React.FC<EditorInfoProps> = ({ authorIds }) => {
             alt={author.name || "Editor"}
             fill
             className="object-cover w-full h-full"
-            unoptimized
+           
           />
         )}
       </div>
