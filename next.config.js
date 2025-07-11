@@ -4,12 +4,7 @@ const nextConfig = {
     domains: [
       'grounded-rainbow-3b0e27f8c5.media.strapiapp.com', // Strapi CDN
     ],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.strapiapp.com',
-      },
-    ],
+    // remotePatterns 제거 -> domains 목록만 사용
     dangerouslyAllowSVG: true, // SVG 허용
   },
   webpack: (config, { isServer }) => {
