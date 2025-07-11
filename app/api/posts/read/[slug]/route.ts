@@ -10,8 +10,9 @@ const STALE_THRESHOLD_SECONDS = 30; // 30초 이내면 최신, 이후에는 백�
 async function refreshInBackground(slug: string, cacheKey: string) {
   // 중복 갱신 방지용 Lock (10초)
   const lockKey = `${cacheKey}:lock`;
-  const acquired = await redis?.set(lockKey, '1', { NX: true, EX: 10 } as any);
-  if (!acquired) return; // 누군가 이미 갱신 중
+  // Redis v3 호환 – "SET key value NX EX 10"
+  const acquired = await (redis as any)?.set(lockKey, '1', 'NX', 'EX', 10);
+  if (acquired !== 'OK') return; // 누군가 이미 갱신 중
 
   try {
     const cachedRaw = await redis?.get(cacheKey);
