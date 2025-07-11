@@ -31,17 +31,22 @@ async function refreshInBackground(slug: string, cacheKey: string) {
       'Content-Type': 'application/json',
       ...(process.env.STRAPI_TOKEN ? { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` } : {}),
     };
-    const tsRes = await fetch(`${STRAPI_URL}/api/articles?${query}`, { headers });
-    if (!tsRes.ok) {
-      throw new Error(`timestamp fetch failed (${tsRes.status})`);
+    let freshUpdated: string | null = null;
+    try {
+      const tsRes = await fetch(`${STRAPI_URL}/api/articles?${query}`, { headers });
+      if (tsRes.ok) {
+        const tsJson = await tsRes.json();
+        const meta = tsJson?.data?.[0]?.attributes ?? {};
+        freshUpdated = meta.updatedAt ?? meta.updated_at ?? meta.publishedAt ?? meta.published_at ?? null;
+      }
+    } catch(err){
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('timestamp lightweight query failed, will fallback to full fetch', err);
+      }
     }
-    const tsJson = await tsRes.json();
-    const freshMeta = tsJson?.data?.[0]?.attributes ?? {};
 
     const cachedUpdated = (current as any)?.updatedAt ?? (current as any)?.updated_at ?? (current as any)?.publishedAt ?? (current as any)?.published_at;
-    const freshUpdated = freshMeta.updatedAt ?? freshMeta.updated_at ?? freshMeta.publishedAt ?? freshMeta.published_at;
-
-    if (cachedUpdated === freshUpdated) {
+    if (freshUpdated && cachedUpdated === freshUpdated) {
       // 변경 없음 → fetchedAt만 갱신
       await redis?.set(cacheKey, JSON.stringify({ data: current, fetchedAt: Date.now() }));
       return;
