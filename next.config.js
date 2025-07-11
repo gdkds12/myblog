@@ -1,15 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['grounded-rainbow-3b0e27f8c5.strapiapp.com'],
+    domains: [
+      'grounded-rainbow-3b0e27f8c5.media.strapiapp.com', // Strapi CDN
+    ],
     remotePatterns: [
-        {
-            protocol: 'http',
-            hostname: '*',
-        },
       {
         protocol: 'https',
-        hostname: '*',
+        hostname: '**.strapiapp.com',
       },
     ],
     dangerouslyAllowSVG: true, // SVG 허용
