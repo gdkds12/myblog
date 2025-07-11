@@ -56,10 +56,8 @@ export default function Header() {
                                         alt="Logo"
                                         width={24}
                                         height={24}
-                                        sizes="24px"
-                                        
-                                        unoptimized
-                                        priority={true}
+                                        className="dark:invert"
+                                        priority
                                         loading="eager"
                                     />
                                 </Link>
