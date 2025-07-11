@@ -16,6 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={notoSans.className} suppressHydrationWarning>
       <head>
+        {/* Preconnect & DNS Prefetch for remote media domain to improve LCP */}
+        <link rel="dns-prefetch" href="https://grounded-rainbow-3b0e27f8c5.media.strapiapp.com" />
+        <link rel="preconnect" href="https://grounded-rainbow-3b0e27f8c5.media.strapiapp.com" crossOrigin="anonymous" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
         <title>Your Blog Title</title>
