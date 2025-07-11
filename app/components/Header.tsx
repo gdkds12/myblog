@@ -55,12 +55,14 @@ export default function Header() {
                             <div className="flex items-center space-x-8">
                                 <Link href="/" className="flex items-center">
                                     <Image
-                                        src="/logo.png"
+                                        src="/logo.svg"
                                         alt="Logo"
                                         width={24}
                                         height={24}
                                         style={logoStyle}
                                         unoptimized
+                                        priority={true}
+                                        loading="eager"
                                     />
                                 </Link>
                                 <Link

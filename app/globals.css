@@ -1,5 +1,4 @@
-/* Prism.js의 테마를 임포트합니다. */
-@import 'prismjs/themes/prism-tomorrow.css';
+
 
 /* Pretendard 폰트를 임포트합니다. */
 /* removed external Pretendard import – using next/font instead */
