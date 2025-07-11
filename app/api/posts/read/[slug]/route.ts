@@ -23,15 +23,18 @@ async function refreshInBackground(slug: string, cacheKey: string) {
     const query = qs.stringify({
       fields: ['updatedAt','updated_at','publishedAt','published_at'],
       filters: { slug: { $eq: slug } },
-      pagination: { pageSize: 1 },
-    }, { encodeValuesOnly: true });
+      publicationState: 'live',
+      pagination: { limit: 1 },
+    }, { encodeValuesOnly: true, arrayFormat: 'indices' });
     const STRAPI_URL = process.env.STRAPI_URL || process.env.NEXT_PUBLIC_CMS_URL;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...(process.env.STRAPI_TOKEN ? { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` } : {}),
     };
     const tsRes = await fetch(`${STRAPI_URL}/api/articles?${query}`, { headers });
-    if (!tsRes.ok) throw new Error('timestamp fetch failed');
+    if (!tsRes.ok) {
+      throw new Error(`timestamp fetch failed (${tsRes.status})`);
+    }
     const tsJson = await tsRes.json();
     const freshMeta = tsJson?.data?.[0]?.attributes ?? {};
 
@@ -50,6 +53,15 @@ async function refreshInBackground(slug: string, cacheKey: string) {
     await redis?.set(cacheKey, JSON.stringify({ data: fresh, fetchedAt: Date.now() }));
   } catch (err) {
     console.error('Background refresh error:', err);
+    // 실패 시 전체 fetch로 시도 (네트워크/400 에러 등)
+    try {
+      const fresh = await getPostBySlug(slug);
+      if (fresh) {
+        await redis?.set(cacheKey, JSON.stringify({ data: fresh, fetchedAt: Date.now() }));
+      }
+    } catch(e){
+      console.error('Fallback full fetch failed:', e);
+    }
   } finally {
     // lock 해제
     await redis?.del(`${cacheKey}:lock`).catch(() => {});
