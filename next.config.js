@@ -4,7 +4,7 @@ const nextConfig = {
     domains: [
       'grounded-rainbow-3b0e27f8c5.media.strapiapp.com', // Strapi CDN
     ],
-    // remotePatterns 제거 -> domains 목록만 사용
+    unoptimized: true, // 전체 이미지 최적화 비활성화하여 원본 전달
     dangerouslyAllowSVG: true, // SVG 허용
   },
   webpack: (config, { isServer }) => {
