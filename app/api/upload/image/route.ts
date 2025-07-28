@@ -2,8 +2,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToGCS } from '@/lib/gcs';
 
+// 동적 라우트로 설정하여 빌드 시 실행 방지
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
+    // GCS 설정 확인
+    if (!process.env.GCS_PROJECT_ID || !process.env.GCS_BUCKET_NAME) {
+      return NextResponse.json(
+        { error: 'GCS is not configured on this server' },
+        { status: 503 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     

@@ -1,12 +1,15 @@
 // lib/gcs.ts - Google Cloud Storage 유틸리티
 import { Storage } from '@google-cloud/storage';
 
-const storage = new Storage({
+// 환경변수 체크
+const hasGCSConfig = process.env.GCS_PROJECT_ID && process.env.GCS_BUCKET_NAME;
+
+const storage = hasGCSConfig ? new Storage({
   projectId: process.env.GCS_PROJECT_ID,
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+}) : null;
 
-const bucket = storage.bucket(process.env.GCS_BUCKET_NAME || '');
+const bucket = hasGCSConfig && storage ? storage.bucket(process.env.GCS_BUCKET_NAME!) : null;
 
 export interface UploadOptions {
   destination: string;
@@ -24,6 +27,10 @@ export async function uploadToGCS(
   fileBuffer: Buffer,
   options: UploadOptions
 ): Promise<string> {
+  if (!bucket) {
+    throw new Error('GCS is not configured. Please set GCS_PROJECT_ID and GCS_BUCKET_NAME environment variables.');
+  }
+
   const { destination, metadata = {}, makePublic = true } = options;
 
   const file = bucket.file(destination);
@@ -61,6 +68,10 @@ export async function uploadToGCS(
  * @param filename 삭제할 파일명
  */
 export async function deleteFromGCS(filename: string): Promise<void> {
+  if (!bucket) {
+    throw new Error('GCS is not configured. Please set GCS_PROJECT_ID and GCS_BUCKET_NAME environment variables.');
+  }
+
   try {
     await bucket.file(filename).delete();
   } catch (error) {

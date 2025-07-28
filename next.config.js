@@ -2,12 +2,9 @@
 const nextConfig = {
   images: {
     domains: [
-      'storage.googleapis.com', // GCS bucket
-      'lh3.googleusercontent.com', // Google CDN
-      'cdn.googleapis.com', // Google CDN for optimized images
+      '34.111.238.251', // CDN IP 주소 (실제 사용 중)
       'via.placeholder.com', // 플레이스홀더 이미지
       'picsum.photos', // 테스트 이미지
-      '34.111.238.251', // CDN IP 주소
     ],
     formats: ['image/avif', 'image/webp'], // 최적화된 이미지 포맷
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30일 캐시
