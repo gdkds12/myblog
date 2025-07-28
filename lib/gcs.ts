@@ -110,27 +110,7 @@ export function optimizeImageUrl(
     format?: 'avif' | 'webp' | 'jpg';
   } = {}
 ): string {
-  // GCS URL이 아닌 경우 원본 반환
-  if (!originalUrl.includes('storage.googleapis.com')) {
-    return originalUrl;
-  }
-
-  const { width, height, quality = 75, format } = options;
-  
-  // CDN이 설정되어 있으면 CDN을 통한 이미지 최적화
-  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
-  if (cdnUrl) {
-    const params = new URLSearchParams();
-    if (width) params.set('w', width.toString());
-    if (height) params.set('h', height.toString());
-    if (quality) params.set('q', quality.toString());
-    if (format) params.set('f', format);
-
-    const filename = originalUrl.split('/').pop();
-    return `${cdnUrl}/${filename}?${params.toString()}`;
-  }
-
-  // CDN이 없으면 원본 URL 반환
+  // CDN 최적화 비활성화 - 원본 URL 그대로 반환
   return originalUrl;
 }
 
@@ -140,12 +120,6 @@ export function optimizeImageUrl(
  * @returns 최적화된 마크다운 내용
  */
 export function optimizeMarkdownImages(markdown: string): string {
-  // 마크다운 이미지 패턴: ![alt](url "title")
-  const imageRegex = /!\[([^\]]*)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g;
-  
-  return markdown.replace(imageRegex, (match, alt, url, title) => {
-    const optimizedUrl = optimizeImageUrl(url, { quality: 80 });
-    const titlePart = title ? ` "${title}"` : '';
-    return `![${alt}](${optimizedUrl}${titlePart})`;
-  });
+  // 최적화 비활성화 - 원본 마크다운 그대로 반환
+  return markdown;
 }
