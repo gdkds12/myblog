@@ -1,7 +1,7 @@
 ---
 title: "개발자는 결국 대체될까?"
 slug: "main-category-post"
-excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
+excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다. (업데이트됨)"
 feature_image: "https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/1_vibecoding_trend.webp"
 published_at: "2024-01-30T16:00:00.000Z"
 tags: ["main", "blog", "tech"]
