@@ -1,0 +1,54 @@
+# .github/workflows/notify-deployment.yml
+name: Notify Server Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/posts/**/*.md'
+      - 'content/pages/**/*.md'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            content/posts/**/*.md
+            content/pages/**/*.md
+
+      - name: List changed files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "📝 Content files changed:"
+          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+
+      - name: Trigger server webhook
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔔 Triggering server deployment webhook..."
+          
+          # GitHub 웹훅이 자동으로 서버에 전송됨
+          # 별도 API 호출 불필요 (GitHub webhook이 처리)
+          
+          echo "✅ Server will automatically deploy via GitHub webhook"
+          echo "📍 Monitor deployment at: https://greedient.kr/api/webhook"
+
+      - name: Deployment summary
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changed files**: ${{ steps.changed-files.outputs.all_changed_files }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger time**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Expected deploy time**: ~2-3 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Site URL**: https://greedient.kr" >> $GITHUB_STEP_SUMMARY

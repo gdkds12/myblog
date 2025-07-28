@@ -3,8 +3,8 @@ import type { Tag } from '@/lib/types';
 import Footer from './components/Footer';
 import { getPosts, getTags } from '@/lib/markdown';
 
-// ISR 설정 - 메인 페이지는 자주 업데이트될 수 있으므로 짧은 간격
-export const revalidate = 1800; // 30분마다 재검증
+// ISR 설정 - 메인 페이지는 새 포스트를 빠르게 반영하기 위해 짧은 간격
+export const revalidate = 300; // 5분마다 재검증 (새 포스트 빠른 감지)
 export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
 
 export default async function Home() {

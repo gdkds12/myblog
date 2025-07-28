@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
 import { getPosts, getPostsByTag } from '@/lib/markdown';
 
-// ISR 캐시 설정
-export const revalidate = 1800; // 30분마다 재검증
+// ISR 캐시 설정 - 새 포스트를 빠르게 반영
+export const revalidate = 300; // 5분마다 재검증
 export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
 
 const CACHE_TTL_SECONDS = 60 * 60; // Redis 키 TTL

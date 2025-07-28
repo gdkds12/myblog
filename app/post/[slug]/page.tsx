@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 import { getPostBySlug, getPosts } from '@/lib/markdown';
 import PostClientComponent from './PostClientComponent';
 
-// ISR 설정
-export const revalidate = 3600; // 1시간마다 재검증
+// ISR 설정 - 새로운 파일을 빠르게 감지하기 위해 짧은 간격으로 설정
+export const revalidate = 60; // 1분마다 재검증 (새 파일 빠른 감지)
 export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
 export const dynamicParams = true; // 새로운 슬러그에 대해 동적으로 페이지 생성
 
