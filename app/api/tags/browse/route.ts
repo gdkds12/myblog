@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
 import { getTags } from '@/lib/markdown';
 
-const CACHE_TTL_SECONDS = 10 * 60; // 10분 캐시
+// ISR 캐시 설정
+export const revalidate = 3600; // 1시간마다 재검증  
+export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
+
+const CACHE_TTL_SECONDS = 60 * 60; // Redis 키 TTL
+const STALE_THRESHOLD_SECONDS = 30; // 30초 이내면 새로고침 안 함
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

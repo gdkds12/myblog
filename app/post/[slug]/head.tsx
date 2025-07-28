@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getPostBySlug } from '@/lib/strapi';
+import { getPostBySlug } from '@/lib/markdown';
 
 interface Props {
   params: { slug: string };

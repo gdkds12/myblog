@@ -6,10 +6,17 @@ interface TableOfContentsProps {
 
 const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
     const [activeId, setActiveId] = useState<string | null>(null);
-    const scrollOffset = window.innerHeight / 4; // 목차 클릭 시 스크롤 위치 조정
-    const activeOffset = window.innerHeight / 2.2; // 스크롤 시 목차 활성화 기준선 조정
+    const [isClient, setIsClient] = useState(false);
+    const scrollOffset = typeof window !== 'undefined' ? window.innerHeight / 4 : 200; // 목차 클릭 시 스크롤 위치 조정
+    const activeOffset = typeof window !== 'undefined' ? window.innerHeight / 2.2 : 300; // 스크롤 시 목차 활성화 기준선 조정
 
     useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isClient) return;
+        
         const handleScroll = () => {
             const scrollPosition = window.scrollY;
             const sections = toc.map(item => document.getElementById(item.id));
@@ -47,7 +54,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [toc, activeOffset]);
+    }, [toc, activeOffset, isClient]);
 
     if (toc.length === 0) return null;
 
@@ -61,11 +68,13 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
                             href={`#${item.id}`}
                             onClick={(e) => {
                                 e.preventDefault();
-                                const targetElement = document.getElementById(item.id);
-                                if (targetElement) {
-                                    const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - scrollOffset;
-                                    window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-                                    setActiveId(item.id);
+                                if (typeof window !== 'undefined') {
+                                    const targetElement = document.getElementById(item.id);
+                                    if (targetElement) {
+                                        const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - scrollOffset;
+                                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                                        setActiveId(item.id);
+                                    }
                                 }
                             }}
                             className={`block transition-all duration-200 ${

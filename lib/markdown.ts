@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import remarkHtml from 'remark-html';
 import readingTime from 'reading-time';
 import { PostOrPage, Tag, Author } from './types';
+import { optimizeMarkdownImages } from './gcs';
 
 // 마크다운 파일이 저장될 디렉토리
 const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
@@ -45,11 +46,14 @@ export function parseMarkdownFile(filePath: string): PostOrPage | null {
       return null;
     }
 
+    // 이미지 URL 최적화 적용
+    const optimizedContent = optimizeMarkdownImages(content);
+
     // remark를 사용한 향상된 마크다운 처리
     const processedContent = remark()
       .use(remarkGfm) // GitHub Flavored Markdown 지원
       .use(remarkHtml, { sanitize: false }) // HTML 출력
-      .processSync(content);
+      .processSync(optimizedContent);
 
     const html = processedContent.toString();
 

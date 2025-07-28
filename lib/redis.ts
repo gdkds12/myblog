@@ -1,10 +1,13 @@
 import Redis from 'ioredis';
 
-if (!process.env.REDIS_HOST || !process.env.REDIS_PORT) {
-  console.warn('Redis environment variables (REDIS_HOST, REDIS_PORT) are not set. Caching will be disabled.');
+// 빌드 환경에서는 Redis 비활성화
+const isBuilding = process.env.NODE_ENV === 'production' && process.env.BUILD_MODE === 'true';
+
+if (!process.env.REDIS_HOST || !process.env.REDIS_PORT || isBuilding) {
+  console.warn('Redis is disabled (build mode or missing environment variables). Caching will be disabled.');
 }
 
-const redis = process.env.REDIS_HOST && process.env.REDIS_PORT
+const redis = !isBuilding && process.env.REDIS_HOST && process.env.REDIS_PORT
   ? new Redis({
       host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT, 10),

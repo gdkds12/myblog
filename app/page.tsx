@@ -3,6 +3,10 @@ import type { Tag } from '@/lib/types';
 import Footer from './components/Footer';
 import { getPosts, getTags } from '@/lib/markdown';
 
+// ISR 설정 - 메인 페이지는 자주 업데이트될 수 있으므로 짧은 간격
+export const revalidate = 1800; // 30분마다 재검증
+export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
+
 export default async function Home() {
   // 1. fetch posts & tags in parallel
   const [allPosts, tags] = await Promise.all([
