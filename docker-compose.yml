@@ -2,10 +2,6 @@ services:
   web:
     build:
       context: .
-      args:
-        # STRAPI_URL: https://grounded-rainbow-3b0e27f8c5.strapiapp.com
-        # NEXT_PUBLIC_CMS_URL: https://grounded-rainbow-3b0e27f8c5.strapiapp.com
-        # Strapi-related args commented out - now using markdown files
     container_name: myblog
     restart: unless-stopped
     depends_on:
@@ -14,13 +10,6 @@ services:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # Google Cloud Storage 설정
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
-      - GCS_PROJECT_ID=${GCS_PROJECT_ID}
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-key.json
-      # CDN 설정
-      - NEXT_PUBLIC_CDN_URL=${NEXT_PUBLIC_CDN_URL}
-      - NEXT_PUBLIC_IMAGE_CDN=${NEXT_PUBLIC_IMAGE_CDN}
     expose:
       - "3000"
 
