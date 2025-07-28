@@ -27,7 +27,7 @@ GITHUB_OWNER=gdkds12
 GITHUB_REPO=myblog
 
 # 보안 키들
-GITHUB_WEBHOOK_SECRET=your-github-webhook-secret-here
+WEBHOOK_SECRET=your-github-webhook-secret-here
 REVALIDATE_SECRET=your-revalidate-secret-here
 
 # 사이트 정보
@@ -57,7 +57,7 @@ git config credential.helper store
 Repository Settings → Webhooks → Add webhook
 - Payload URL: https://greedient.kr/api/webhook
 - Content type: application/json
-- Secret: [GITHUB_WEBHOOK_SECRET와 동일한 값]
+- Secret: [WEBHOOK_SECRET와 동일한 값]
 - Events: Just the push event
 - Active: ✅
 ```

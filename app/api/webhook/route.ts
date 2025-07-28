@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const githubEvent = request.headers.get('x-github-event');
 
     // GitHub 웹훅 시크릿 검증
-    const secret = process.env.GITHUB_WEBHOOK_SECRET;
+    const secret = process.env.WEBHOOK_SECRET;
     if (!secret) {
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
     }
