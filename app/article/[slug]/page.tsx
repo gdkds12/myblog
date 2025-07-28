@@ -35,7 +35,7 @@ export default function Article() {
         async function fetchPost() {
             try {
                 // API Route 호출로 변경
-                const response = await fetch(`/api/posts/read/${slug}?include=tags,authors&filter=tag:article`);
+                const response = await fetch(`/api/posts/read/${slug}`);
                  if (!response.ok) {
                     // 404 에러 처리 등 추가 가능
                     if (response.status === 404) {
@@ -98,9 +98,14 @@ export default function Article() {
 
          return parse(processedContent, {
             replace: (domNode: any) => {
-              if (domNode.type === 'tag' && domNode.name === 'notice') {
-                    return <Notice type={domNode.attribs.type}>{domNode.children[0]?.data}</Notice>;
-                }
+               // p 태그 안에 Notice가 있어 잘못된 중첩이 생기는 경우 방지
+               if (domNode.type === 'tag' && domNode.name === 'p' && domNode.children?.[0]?.name === 'notice') {
+                     const nd = domNode.children[0];
+                     return <Notice type={nd.attribs.type}>{nd.children[0]?.data}</Notice>;
+               }
+               if (domNode.type === 'tag' && domNode.name === 'notice') {
+                     return <Notice type={domNode.attribs.type}>{domNode.children[0]?.data}</Notice>;
+               }
                 if (domNode.type === 'tag' && domNode.name === 'pre' && domNode.children[0]?.name === 'code') {
                     const className = domNode.children[0].attribs.class;
                     const match = /language-(\w+)/.exec(className || '');
@@ -124,20 +129,20 @@ export default function Article() {
                     return <h2/>; // text가 없는 경우 비어있는 h2태그 반환
                  }
                  if (domNode.type === 'tag' && domNode.name === 'img') {
-                    const src = domNode.attribs.src;
-                    const alt = domNode.attribs.alt;
-                    return (
-                         <Image
-                            src={src}
-                            alt={alt || 'image'}
-                            width={0} // 반응형 처리
-                            height={0} // 반응형 처리
-                            sizes="100vw" // 반응형 처리
-                            className="cursor-pointer w-full h-auto" // 반응형 처리
-                            onClick={() => handleImageClick(src, alt)}
-                         />
-                    )
-                }
+                     const src = domNode.attribs.src;
+                     const alt = domNode.attribs.alt;
+                     return (
+                          <Image
+                             src={src}
+                             alt={alt || 'image'}
+                             width={0} // 반응형 처리
+                             height={0} // 반응형 처리
+                             sizes="100vw" // 반응형 처리
+                             className="cursor-pointer w-full h-auto" // 반응형 처리
+                             onClick={() => handleImageClick(src, alt)}
+                          />
+                     )
+                 }
             }
         });
     };
@@ -154,7 +159,7 @@ export default function Article() {
 
 
     return (
-        <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7]`}>
             {/* MathJax 스크립트 추가 */}
             <Script id="mathjax-config">
                 {`

@@ -1,6 +1,6 @@
 // app/articles/page.tsx
 import ArticlePageClient from "./ArticlePageClient";
-import { getPosts } from "@/lib/strapi";
+import { getPosts } from "@/lib/markdown";
 import type { PostOrPage } from "@/lib/types";
 
 export const revalidate = 60 * 60 * 24 * 7; // cache for 7 days

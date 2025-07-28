@@ -35,7 +35,7 @@ export default function Post() {
     useEffect(() => {
         async function fetchPost() {
             try {
-                const response = await fetch(`/api/posts/read/${slug}?include=tags,authors&filter=tag:-article`);
+                const response = await fetch(`/api/posts/read/${slug}`);
                 if (!response.ok) {
                     if (response.status === 404) {
                         console.error('Post not found');
@@ -145,7 +145,7 @@ export default function Post() {
 
 
     return (
-         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7] ${theme === 'dark' ? 'dark' : ''}`}>
+         <div className={`min-h-screen flex flex-col bg-white dark:bg-[#121212] text-black dark:text-[#E4E4E7]`}>
             <Script id="mathjax-config">
                 {`
                    MathJax = {

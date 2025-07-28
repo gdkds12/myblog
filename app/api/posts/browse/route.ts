@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
-import { getPosts } from '@/lib/strapi';
+import { getPosts, getPostsByTag } from '@/lib/markdown';
 
 
 const CACHE_TTL_SECONDS = 60 * 60; // Redis 키 TTL
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const page = Number(searchParams.get('page') ?? '1');
   const tagSlug = searchParams.get('tag'); // optional tag filter
   const start = (page - 1) * limit;
-  const cacheKey = `strapi:posts:browse:${start}:${limit}:${tagSlug ?? 'all'}`;
+  const cacheKey = `markdown:posts:browse:${start}:${limit}:${tagSlug ?? 'all'}`;
 
 
 
@@ -43,12 +43,11 @@ export async function GET(request: Request) {
     }
   }
 
-  // 2. 캐시 없으면 Strapi 호출
+  // 2. 캐시 없으면 마크다운 파일 읽기
   try {
-    let postsArray = await getPosts({ start, limit });
-    if (tagSlug) {
-      postsArray = postsArray.filter((post: any) => post.tags?.some((t: any) => t.slug === tagSlug));
-    }
+    let postsArray = tagSlug 
+      ? await getPostsByTag(tagSlug, { start, limit })
+      : await getPosts({ start, limit });
 
     // 3. Redis에 저장 (posts 배열 + 메타)
     if (redis) {
@@ -68,10 +67,9 @@ export async function GET(request: Request) {
 
 async function refreshListInBackground({ start, limit, tagSlug, cacheKey }: { start:number; limit:number; tagSlug:string|null; cacheKey:string }) {
   try {
-    let fresh = await getPosts({ start, limit });
-    if (tagSlug) {
-      fresh = fresh.filter((post: any) => post.tags?.some((t: any) => t.slug === tagSlug));
-    }
+    let fresh = tagSlug 
+      ? await getPostsByTag(tagSlug, { start, limit })
+      : await getPosts({ start, limit });
     await redis?.set(cacheKey, JSON.stringify({ data: fresh, fetchedAt: Date.now() }));
   } catch (e) {
     console.error('Background list refresh error:', e);

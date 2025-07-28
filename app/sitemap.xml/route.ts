@@ -8,7 +8,7 @@ export async function GET() {
 
   // Dynamic post and article pages
   try {
-    const posts = await (await import('@/lib/strapi')).getPosts({ limit: 500 });
+    const posts = await (await import('@/lib/markdown')).getPosts({ limit: 500 });
     posts.forEach((p: any) => {
       if (p.slug) urls.push(`/post/${p.slug}`);
       if (p.tags?.some((t: any) => t.slug === 'article')) {

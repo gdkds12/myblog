@@ -26,6 +26,9 @@ export interface PostOrPage {
   published_at?: string;
   primary_author?: Author | null;
   authors?: Author[];
+  reading_time?: string;
+  word_count?: number;
+  toc?: Array<{ id: string; text: string; level: number }>;
 }
 
 // Alias for convenience

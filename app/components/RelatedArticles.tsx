@@ -45,7 +45,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ currentPostTags, curr
                     return;
                 }
 
-                const apiUrl = `/api/posts/browse?limit=6&include=tags,authors&filter=tag:[${encodeURIComponent(tagSlugs.join(','))}]&order=published_at%20DESC`;
+                const apiUrl = `/api/posts/browse?limit=6&tag=${encodeURIComponent(tagSlugs[0])}`;
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,7 +1,7 @@
 import BlogHome from './components/BlogHome';
 import type { Tag } from '@/lib/types';
 import Footer from './components/Footer';
-import { getPosts, getTags } from '@/lib/strapi';
+import { getPosts, getTags } from '@/lib/markdown';
 
 export default async function Home() {
   // 1. fetch posts & tags in parallel
@@ -11,7 +11,7 @@ export default async function Home() {
   ]);
 
 
-    // 4. 카테고리: 우선 Strapi에서 가져온 태그(또는 카테고리)를 사용하고,
+    // 4. 카테고리: 마크다운에서 가져온 태그들을 사용하고,
   // 비어 있으면 포스트에 포함된 태그를 추출해 대체합니다.
   // 블로그 메인에서는 'article' 태그가 붙은 글을 제외합니다.
   const posts = allPosts.filter((post: any) => !(post.tags?.some((t: any) => t.slug === 'article')));

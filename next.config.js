@@ -2,7 +2,8 @@
 const nextConfig = {
   images: {
     domains: [
-      'grounded-rainbow-3b0e27f8c5.media.strapiapp.com', // Strapi CDN
+      'storage.googleapis.com', // GCS bucket
+      'lh3.googleusercontent.com', // Google CDN
     ],
     unoptimized: true, // 전체 이미지 최적화 비활성화하여 원본 전달
     dangerouslyAllowSVG: true, // SVG 허용

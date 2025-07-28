@@ -30,7 +30,7 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({ theme, initialPosts }) => {
             setIsLoading(true);
             setError(null);
             try {
-                const response = await fetch('/api/posts/browse?limit=8&include=tags,authors&order=published_at%20DESC');
+                const response = await fetch('/api/posts/browse?limit=8');
                 if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`);
                 }
