@@ -6,10 +6,7 @@ const nextConfig = {
       'via.placeholder.com', // 플레이스홀더 이미지
       'picsum.photos', // 테스트 이미지
     ],
-    formats: ['image/avif', 'image/webp'], // 최적화된 이미지 포맷
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30일 캐시
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    unoptimized: true, // 외부 CDN 이미지 최적화 비활성화
     dangerouslyAllowSVG: true, // SVG 허용
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
