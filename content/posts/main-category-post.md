@@ -10,7 +10,6 @@ draft: false
 ---
 
 
-
 > 이 글은 [커서맛피아 뉴스레터](https://maily.so/cursormatfia)에서 발행되었습니다.
 >
 > 가장 전문적인 바이브코딩 인사이트를 매주 받아보세요.
