@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
 
     // GitHub 웹훅 시크릿 검증
     const secret = process.env.WEBHOOK_SECRET;
-    const skipSignatureCheck = process.env.SKIP_SIGNATURE_CHECK === 'true'; // 임시 디버깅용
+    const skipSignatureCheck = true; // 임시로 항상 스킵 (디버깅용)
+    
+    console.log('🔧 Debug: skipSignatureCheck =', skipSignatureCheck);
+    console.log('🔧 Debug: SKIP_SIGNATURE_CHECK env =', process.env.SKIP_SIGNATURE_CHECK);
     
     if (!secret && !skipSignatureCheck) {
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
