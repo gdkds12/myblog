@@ -67,6 +67,8 @@ def verify_signature(payload, signature):
 
 def handle_webhook(request_body, signature):
     log('📦 Webhook received')
+    log(f'📋 Payload length: {len(request_body)} bytes')
+    log(f'🔑 Signature: {signature[:20]}...' if signature else '🔑 No signature')
     
     # 서명 검증
     if not verify_signature(request_body, signature):
@@ -74,12 +76,14 @@ def handle_webhook(request_body, signature):
     
     try:
         payload = json.loads(request_body)
-    except json.JSONDecodeError:
-        log('❌ Invalid JSON payload')
+        log(f'✅ JSON payload parsed successfully')
+    except json.JSONDecodeError as e:
+        log(f'❌ Invalid JSON payload: {e}')
         return 400, {'error': 'Invalid JSON'}
     
     # ref 확인
     ref = payload.get('ref', '')
+    log(f'🔀 Branch ref: {ref}')
     if ref != 'refs/heads/main':
         log('ℹ️ Not main branch push, ignoring')
         return 200, {'message': 'Not main branch, ignored'}
@@ -88,25 +92,44 @@ def handle_webhook(request_body, signature):
     
     # 프로젝트 디렉토리로 이동
     try:
+        log(f'📁 Current directory: {os.getcwd()}')
+        log(f'📁 Target directory: {PROJECT_DIR}')
         os.chdir(PROJECT_DIR)
         log(f'📁 Changed to directory: {PROJECT_DIR}')
     except Exception as e:
         log(f'❌ Failed to change directory: {e}')
-        return 500, {'error': 'Project directory not found'}
+        return 500, {'error': f'Project directory error: {str(e)}'}
+    
+    # Git 설정 확인 및 수정
+    log('🔧 Checking git configuration...')
+    try:
+        # Git safe directory 설정
+        subprocess.run(['git', 'config', '--global', '--add', 'safe.directory', PROJECT_DIR], 
+                      capture_output=True, text=True, timeout=10)
+        log('✅ Git safe directory configured')
+    except Exception as e:
+        log(f'⚠️ Git config warning: {e}')
     
     # Git pull 실행
     log('📥 Pulling latest changes...')
     try:
         result = subprocess.run(['git', 'pull', 'origin', 'main'], 
-                              capture_output=True, text=True, timeout=30)
+                              capture_output=True, text=True, timeout=60)
+        log(f'📝 Git pull stdout: {result.stdout}')
+        if result.stderr:
+            log(f'📝 Git pull stderr: {result.stderr}')
+            
         if result.returncode == 0:
             log('✅ Git pull successful')
         else:
-            log(f'❌ Git pull failed: {result.stderr}')
-            return 500, {'error': 'Git pull failed'}
+            log(f'❌ Git pull failed with code {result.returncode}')
+            return 500, {'error': f'Git pull failed: {result.stderr}'}
+    except subprocess.TimeoutExpired:
+        log('❌ Git pull timeout')
+        return 500, {'error': 'Git pull timeout'}
     except Exception as e:
         log(f'❌ Git pull error: {e}')
-        return 500, {'error': 'Git pull error'}
+        return 500, {'error': f'Git pull error: {str(e)}'}
     
     # Next.js 캐시 무효화 요청
     log('♻️ Triggering cache revalidation...')
@@ -128,7 +151,8 @@ def handle_webhook(request_body, signature):
             method='POST'
         )
         
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            log(f'📊 Revalidate response: {response.status}')
             if response.status == 200:
                 log('✅ Cache revalidation triggered')
             else:
