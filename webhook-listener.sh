@@ -70,21 +70,37 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
             if result.returncode == 0:
                 log('Git pull successful')
                 
-                # 캐시 무효화 (선택적)
-                log('Skipping cache invalidation for now...')
-                # cache_result = subprocess.run([
-                #     'curl', '-s', '-X', 'POST',
-                #     '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
-                #     '-H', 'Content-Type: application/json',
-                #     '-d', '{\"paths\": [\"/\", \"/articles\", \"/docs\"]}',
-                #     'http://localhost:3000/api/revalidate'
-                # ], capture_output=True, text=True, timeout=10)
+                # 캐시 무효화
+                log('Invalidating cache...')
+                try:
+                    # Docker 네트워크를 통해 접근
+                    cache_result = subprocess.run([
+                        'docker', 'exec', 'myblog', 'curl', '-s', '-X', 'POST',
+                        '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
+                        '-H', 'Content-Type: application/json',
+                        '-d', '{"paths": ["/", "/articles", "/docs"]}',
+                        'http://localhost:3000/api/revalidate'
+                    ], capture_output=True, text=True, timeout=10)
+                    
+                    log(f'Cache result: {cache_result.returncode}')
+                    if cache_result.stdout:
+                        log(f'Cache stdout: {cache_result.stdout}')
+                    if cache_result.stderr:
+                        log(f'Cache stderr: {cache_result.stderr}')
+                    
+                    if cache_result.returncode == 0:
+                        log('Cache invalidated successfully')
+                    else:
+                        log('Cache invalidation failed (but continuing...)')
+                        
+                except Exception as cache_error:
+                    log(f'Cache invalidation error: {cache_error}')
                 
                 log('Deployment completed')
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'{\"success\": true, \"message\": \"Deployment completed\"}')
+                self.wfile.write(b'{"success": true, "message": "Deployment completed"}')
             else:
                 log(f'Git pull failed')
                 self.send_response(500)
