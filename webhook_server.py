@@ -55,9 +55,9 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
                 # 캐시 무효화
                 log('Invalidating cache...')
                 try:
-                    # Docker 네트워크를 통해 접근
+                    # 호스트에서 직접 API 호출 (3000번 포트로 노출됨)
                     cache_result = subprocess.run([
-                        'docker', 'exec', 'myblog', 'curl', '-s', '-X', 'POST',
+                        'curl', '-s', '-X', 'POST',
                         '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
                         '-H', 'Content-Type: application/json',
                         '-d', '{"paths": ["/", "/articles", "/docs"]}',
