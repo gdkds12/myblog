@@ -26,7 +26,6 @@ RUN apk add --no-cache git docker-compose
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/content ./content
 
 # Copy and set permissions for the deployment script
 COPY deploy.sh .
