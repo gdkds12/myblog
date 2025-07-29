@@ -25,6 +25,7 @@ git diff --name-only HEAD~1 HEAD
 echo "🛑 Stopping existing containers..."
 docker-compose down
 
+
 # Docker 이미지 재빌드
 echo "🔨 Building new Docker images..."
 docker-compose build --no-cache
