@@ -11,8 +11,8 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Build the Next.js application
-RUN npm run build && npm prune --production
+# Build the Next.js application (standalone output)
+RUN npm run build
 
 # ---- Production ----
 FROM node:24-alpine AS runner
@@ -22,11 +22,10 @@ ENV NODE_ENV=production
 # Install git and docker-compose
 RUN apk add --no-cache git docker-compose
 
-# Copy only the necessary files from the builder stage
+# Copy only the necessary files from the builder stage for standalone
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/content ./content
 
 # Copy and set permissions for the deployment script
@@ -34,4 +33,4 @@ COPY deploy.sh .
 RUN chmod +x ./deploy.sh
 
 EXPOSE 3000
-CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]
+CMD ["node", "server.js"]
