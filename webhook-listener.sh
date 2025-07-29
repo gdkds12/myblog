@@ -119,7 +119,7 @@ while true; do
     response=$(cat << 'RESPONSE'
 HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 62
+Content-Length: 56
 Connection: close
 
 {"status": "Webhook listener is running", "port": 8080}
