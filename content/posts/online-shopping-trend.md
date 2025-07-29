@@ -1,7 +1,7 @@
 ---
 title: "2025 온라인 쇼핑 트렌드"
 slug: "2025onlinetrend"
-excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다. (디버깅 테스트)"
+excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다. (서명 우회 테스트)"
 feature_image: "https://img.greedient.kr/blog-post/2025%20online%20shopping%20trend/opensurvey_trend_online_shopping_2025-10.png.webp"
 published_at: "2024-01-30T16:00:00.000Z"
 tags: ["main", "blog", "tech"]
