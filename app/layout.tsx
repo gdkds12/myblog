@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://storage.googleapis.com" crossOrigin="anonymous" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
-        <title>Your Blog Title</title>
+        <title>greedient 블로그</title>
       </head>
       <body className="bg-white dark:bg-darkBg text-gray-900 dark:text-darkText min-h-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
