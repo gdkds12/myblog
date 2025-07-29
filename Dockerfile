@@ -24,13 +24,20 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001 && \
     apk add --no-cache git docker-compose
 
-# Standalone 빌드 결과물을 복사합니다.
+# Standalone 빌드 결과물을 먼저 복사합니다.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/content ./content
+
+# deploy.sh를 복사하고 권한을 설정합니다.
 COPY --from=builder --chown=nextjs:nodejs /app/deploy.sh ./deploy.sh
 RUN chmod +x ./deploy.sh
+
+# --- [최종 검증 단계] ---
+# /app 폴더의 최종 내용물과 권한을 확인합니다.
+RUN echo "--- Verifying final files in /app ---" && \
+    ls -la /app
 
 # non-root 사용자로 전환
 USER nextjs

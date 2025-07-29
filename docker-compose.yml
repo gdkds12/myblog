@@ -15,7 +15,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock # deploy.sh 스크립트 실행용
 
   caddy:
     image: caddy:latest
