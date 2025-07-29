@@ -44,12 +44,12 @@ jobs:
           echo "🎯 Target URL: ${{ secrets.SERVER_WEBHOOK_URL }}"
           
           # 페이로드 생성 (간소화)
-          PAYLOAD=$(jq -nc 
-            --arg ref "refs/heads/main" 
-            --arg repo_name "${{ github.repository }}" 
-            --arg commit_id "${{ github.sha }}" 
-            --arg message "Content update via GitHub Actions" 
-            --argjson changed_files "$(echo '${{ steps.changes.outputs.changed_files }}' | jq -R 'split(",")')" 
+          PAYLOAD=$(jq -nc \
+            --arg ref "refs/heads/main" \
+            --arg repo_name "${{ github.repository }}" \
+            --arg commit_id "${{ github.sha }}" \
+            --arg message "Content update via GitHub Actions" \
+            --argjson changed_files "$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -R 'split(" ")')" \
             '{
               ref: $ref,
               repository: {
