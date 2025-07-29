@@ -1,36 +1,41 @@
 # syntax=docker/dockerfile:1
 
-# 1. 베이스 이미지 설정
-FROM node:24-alpine
+# Base Stage: 기본 환경 설정
+FROM node:24-alpine AS base
 WORKDIR /app
 
-# 2. 의존성 설치
+# Dependencies Stage: 의존성만 설치
+FROM base AS deps
 COPY package*.json ./
 RUN npm ci
 
-# 3. 전체 소스코드 복사
+# Builder Stage: 소스코드 복사 및 빌드
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# 4. 애플리케이션 빌드
 RUN npm run build
 
-# --- [최종 디버깅 단계] ---
-# 빌드 후 .next 폴더의 전체 구조를 재귀적으로 확인합니다.
-RUN echo "--- Verifying entire .next directory structure ---" && \
-    ls -R /app/.next
+# Production Stage: 최종 실행 이미지 생성
+FROM base AS runner
+ENV NODE_ENV=production
 
-# 5. 보안 및 배포 도구 설치
+# 보안을 위한 non-root 사용자 생성 및 배포 도구 설치
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001 && \
     apk add --no-cache git docker-compose
 
-# 6. 파일 소유권 변경
-RUN chown -R nextjs:nodejs /app
+# Standalone 빌드 결과물을 복사합니다.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/content ./content
+COPY --from=builder --chown=nextjs:nodejs /app/deploy.sh ./deploy.sh
+RUN chmod +x ./deploy.sh
 
-# 7. non-root 사용자로 전환
+# non-root 사용자로 전환
 USER nextjs
 
 EXPOSE 3000
 
-# 8. 애플리케이션을 실행하지 않고, 컨테이너를 계속 실행시켜 내부를 조사할 수 있도록 합니다.
-CMD [ "tail", "-f", "/dev/null" ]
+# 절대 경로로 실행하여 모호함을 제거합니다.
+CMD ["node", "/app/server.js"]
