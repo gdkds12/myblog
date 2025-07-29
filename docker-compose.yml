@@ -12,8 +12,8 @@ services:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"  # 호스트에서 접근 가능하도록 포트 매핑
     volumes:
       - ./content:/app/content # 컨텐츠 파일을 컨테이너와 공유
   caddy:
