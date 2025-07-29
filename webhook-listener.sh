@@ -114,35 +114,81 @@ handle_webhook() {
 log "🚀 Starting webhook listener on port $WEBHOOK_PORT"
 log "📁 Project directory: $PROJECT_DIR"
 
-# socat을 사용한 더 안정적인 HTTP 서버
-if command -v socat &> /dev/null; then
-    log "✅ Using socat for HTTP server"
-    while true; do
-        echo -e "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 56\r\nConnection: close\r\n\r\n{\"status\": \"Webhook listener is running\", \"port\": $WEBHOOK_PORT}" | socat TCP-LISTEN:$WEBHOOK_PORT,fork,reuseaddr STDIO
-        sleep 0.1
-    done
-else
-    log "⚠️ socat not found, installing..."
-    # socat 설치 시도
-    if command -v apt &> /dev/null; then
-        sudo apt update && sudo apt install -y socat
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y socat
-    fi
+# Python HTTP 서버 사용 (가장 안정적)
+python3 -c "
+import http.server
+import socketserver
+import json
+import subprocess
+import os
+import sys
+from urllib.parse import urlparse
+
+class WebhookHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        response = {'status': 'Webhook listener is running', 'port': $WEBHOOK_PORT}
+        self.wfile.write(json.dumps(response).encode())
     
-    # 설치 후 다시 시도
-    if command -v socat &> /dev/null; then
-        log "✅ socat installed successfully"
-        while true; do
-            echo -e "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 56\r\nConnection: close\r\n\r\n{\"status\": \"Webhook listener is running\", \"port\": $WEBHOOK_PORT}" | socat TCP-LISTEN:$WEBHOOK_PORT,fork,reuseaddr STDIO
-            sleep 0.1
-        done
-    else
-        log "❌ Failed to install socat, falling back to netcat"
-        # 단순한 netcat 버전
-        while true; do
-            echo -e "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 56\r\nConnection: close\r\n\r\n{\"status\": \"Webhook listener is running\", \"port\": $WEBHOOK_PORT}" | nc -l -p "$WEBHOOK_PORT" -q 1
-            sleep 0.1
-        done
-    fi
-fi
+    def do_POST(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length).decode('utf-8')
+            signature = self.headers.get('X-Hub-Signature-256', '')
+            
+            print(f'[{__import__(\"datetime\").datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")}] 📦 Webhook received')
+            
+            # bash 함수들을 환경에 로드하고 handle_webhook 호출
+            env = os.environ.copy()
+            env['WEBHOOK_PORT'] = '$WEBHOOK_PORT'
+            env['WEBHOOK_SECRET'] = '$WEBHOOK_SECRET'
+            env['PROJECT_DIR'] = '$PROJECT_DIR'
+            env['REVALIDATE_TOKEN'] = '$REVALIDATE_TOKEN'
+            
+            # 임시 스크립트 생성
+            script_content = '''#!/bin/bash
+source /home/ubuntu/myblog/webhook-listener.sh
+handle_webhook \"''' + post_data.replace('\"', '\\\"') + '''\" \"''' + signature + '''\"
+'''
+            
+            with open('/tmp/webhook_handler.sh', 'w') as f:
+                f.write(script_content)
+            
+            os.chmod('/tmp/webhook_handler.sh', 0o755)
+            
+            # 스크립트 실행
+            result = subprocess.run(['/bin/bash', '/tmp/webhook_handler.sh'], 
+                                  capture_output=True, text=True, env=env, cwd='$PROJECT_DIR')
+            
+            # 결과에 따라 HTTP 응답 코드 설정
+            if result.returncode == 0:
+                self.send_response(200)
+            else:
+                self.send_response(500)
+            
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            
+            if result.stdout:
+                self.wfile.write(result.stdout.encode())
+            else:
+                self.wfile.write(b'{\"success\": true, \"message\": \"Webhook processed\"}')
+                
+        except Exception as e:
+            print(f'Error processing webhook: {e}')
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+    
+    def log_message(self, format, *args):
+        print(f'[{self.log_date_time_string()}] {format % args}')
+
+PORT = $WEBHOOK_PORT
+print(f'[{__import__(\"datetime\").datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")}] 🚀 Python HTTP server starting on port {PORT}')
+
+with socketserver.TCPServer(('', PORT), WebhookHandler) as httpd:
+    httpd.serve_forever()
+"
