@@ -4,7 +4,7 @@ import Footer from './components/Footer';
 import { getPosts, getTags } from '@/lib/markdown';
 
 // ISR 설정 - 메인 페이지는 새 포스트를 빠르게 반영하기 위해 짧은 간격
-export const revalidate = 300; // 5분마다 재검증 (새 포스트 빠른 감지)
+export const revalidate = 60; // 1분마다 재검증 (파일 삭제 빠른 감지)
 export const dynamic = 'force-static'; // 가능한 한 정적으로 처리
 
 export default async function Home() {

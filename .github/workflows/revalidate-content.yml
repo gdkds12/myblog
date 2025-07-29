@@ -35,7 +35,10 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           echo "📝 Content files changed:"
-          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "All changed: ${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "Added: ${{ steps.changed-files.outputs.added_files }}"
+          echo "Modified: ${{ steps.changed-files.outputs.modified_files }}"
+          echo "Deleted: ${{ steps.changed-files.outputs.deleted_files }}"
 
       - name: Send webhook
         run: |
@@ -43,13 +46,16 @@ jobs:
           echo "📝 Environment variables verified"
           echo "🎯 Target URL: ${{ secrets.SERVER_WEBHOOK_URL }}"
           
-          # 페이로드 생성 (간소화)
+          # 페이로드 생성 (삭제된 파일 정보 포함)
           PAYLOAD=$(jq -nc \
             --arg ref "refs/heads/main" \
             --arg repo_name "${{ github.repository }}" \
             --arg commit_id "${{ github.sha }}" \
             --arg message "Content update via GitHub Actions" \
             --argjson changed_files "$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -R 'split(" ")')" \
+            --argjson added_files "$(echo '${{ steps.changed-files.outputs.added_files }}' | jq -R 'split(" ")')" \
+            --argjson modified_files "$(echo '${{ steps.changed-files.outputs.modified_files }}' | jq -R 'split(" ")')" \
+            --argjson deleted_files "$(echo '${{ steps.changed-files.outputs.deleted_files }}' | jq -R 'split(" ")')" \
             '{
               ref: $ref,
               repository: {
@@ -59,10 +65,15 @@ jobs:
               commits: [{
                 id: $commit_id,
                 message: $message,
-                modified: $changed_files
+                added: $added_files,
+                modified: $modified_files,
+                removed: $deleted_files
               }],
               action: "content_update",
-              changed_files: $changed_files
+              changed_files: $changed_files,
+              added_files: $added_files,
+              modified_files: $modified_files,
+              deleted_files: $deleted_files
             }'
           )
           

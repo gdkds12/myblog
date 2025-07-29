@@ -52,16 +52,13 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
             if result.returncode == 0:
                 log('Git pull successful')
                 
-                # 캐시 무효화
+                # 캐시 무효화 (파일 삭제 시 더 광범위하게)
                 log('Invalidating cache...')
                 try:
-                    # 호스트에서 직접 API 호출 (3000번 포트로 노출됨)
+                    # 기본 캐시 무효화
                     cache_result = subprocess.run([
                         'curl', '-s', '-X', 'POST',
-                        '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
-                        '-H', 'Content-Type: application/json',
-                        '-d', '{"paths": ["/", "/articles", "/docs"]}',
-                        'http://localhost:3000/api/revalidate'
+                        f'http://localhost:3000/api/revalidate?secret={REVALIDATE_TOKEN}&path=/'
                     ], capture_output=True, text=True, timeout=10)
                     
                     log(f'Cache result: {cache_result.returncode}')
@@ -69,6 +66,17 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
                         log(f'Cache stdout: {cache_result.stdout}')
                     if cache_result.stderr:
                         log(f'Cache stderr: {cache_result.stderr}')
+                    
+                    # 추가적으로 전체 사이트 캐시 강제 무효화
+                    log('Performing additional cache invalidation...')
+                    additional_cache = subprocess.run([
+                        'curl', '-s', '-X', 'POST',
+                        f'http://localhost:3000/api/revalidate?secret={REVALIDATE_TOKEN}&path=/articles'
+                    ], capture_output=True, text=True, timeout=10)
+                    
+                    log(f'Additional cache result: {additional_cache.returncode}')
+                    if additional_cache.stdout:
+                        log(f'Additional cache stdout: {additional_cache.stdout}')
                     
                     if cache_result.returncode == 0:
                         log('Cache invalidated successfully')
