@@ -23,13 +23,16 @@ ENV NODE_ENV=production
 RUN apk add --no-cache git docker-compose
 
 # Copy only the necessary files from the builder stage for standalone
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/standalone/ ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Copy and set permissions for the deployment script
 COPY deploy.sh .
 RUN chmod +x ./deploy.sh
+
+# Verify that server.js exists
+RUN ls -la /app/server.js
 
 EXPOSE 3000
 CMD ["node", "server.js"]
