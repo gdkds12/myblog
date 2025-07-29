@@ -24,9 +24,25 @@ export async function POST(request: NextRequest) {
       .update(body, 'utf8')
       .digest('hex');
 
+    console.log('🔍 Signature verification debug:');
+    console.log('- Received signature:', signature);
+    console.log('- Expected signature:', expectedSignature);
+    console.log('- Body length:', body.length);
+    console.log('- Secret length:', secret.length);
+
     if (signature !== expectedSignature) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      console.log('❌ Signature mismatch');
+      return NextResponse.json({ 
+        error: 'Invalid signature',
+        debug: {
+          received: signature,
+          expected: expectedSignature,
+          bodyLength: body.length
+        }
+      }, { status: 401 });
     }
+
+    console.log('✅ Signature verified successfully');
 
     const payload = JSON.parse(body);
 

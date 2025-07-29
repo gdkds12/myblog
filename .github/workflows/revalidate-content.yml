@@ -60,34 +60,35 @@ jobs:
           echo "🎯 Target URL: $SERVER_WEBHOOK_URL"
           
           # 변경된 파일 목록을 JSON 배열로 변환
-          CHANGED_FILES_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -R 'split(" ")')
+          CHANGED_FILES='${{ steps.changed-files.outputs.all_changed_files }}'
+          CHANGED_FILES_JSON=$(echo "$CHANGED_FILES" | tr ' ' '\n' | jq -R . | jq -s .)
           
-          # 웹훅 페이로드 생성 (더 간단한 형태)
-          PAYLOAD=$(cat <<EOF
-          {
-            "ref": "refs/heads/main",
-            "repository": {
-              "name": "${{ github.repository }}",
-              "full_name": "${{ github.repository }}"
-            },
-            "commits": [
-              {
-                "id": "${{ github.sha }}",
-                "message": "Content update via GitHub Actions",
-                "modified": $CHANGED_FILES_JSON
-              }
-            ],
-            "action": "content_update",
-            "changed_files": $CHANGED_FILES_JSON
-          }
-          EOF
-          )
+          # 웹훅 페이로드 생성 (minified JSON)
+          PAYLOAD=$(jq -n \
+            --arg ref "refs/heads/main" \
+            --arg repo_name "${{ github.repository }}" \
+            --arg commit_id "${{ github.sha }}" \
+            --argjson changed_files "$CHANGED_FILES_JSON" \
+            '{
+              ref: $ref,
+              repository: {
+                name: $repo_name,
+                full_name: $repo_name
+              },
+              commits: [{
+                id: $commit_id,
+                message: "Content update via GitHub Actions",
+                modified: $changed_files
+              }],
+              action: "content_update",
+              changed_files: $changed_files
+            }')
           
           echo "📦 Payload prepared:"
-          echo "$PAYLOAD" | jq .
+          echo "$PAYLOAD"
           
-          # HMAC 서명 생성
-          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | cut -d' ' -f2)
+          # HMAC 서명 생성 (minified JSON 사용)
+          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -binary | xxd -p -c 256)
           echo "🔐 Signature generated: sha256=$SIGNATURE"
           
           # 웹훅 전송
@@ -109,6 +110,13 @@ jobs:
             echo "✅ Webhook sent successfully (HTTP $HTTP_STATUS)"
           else
             echo "❌ Webhook failed (HTTP $HTTP_STATUS)"
+            
+            # 디버깅을 위한 서명 검증 테스트
+            echo "🔍 Debug: Testing signature generation..."
+            echo "Secret length: ${#WEBHOOK_SECRET}"
+            echo "Payload length: ${#PAYLOAD}"
+            echo "Generated signature: $SIGNATURE"
+            
             exit 1
           fi
 
