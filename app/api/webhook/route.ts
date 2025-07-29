@@ -70,38 +70,24 @@ export async function POST(request: NextRequest) {
         console.log('📝 Content changes detected, updating...');
         
         try {
-          // 1. Git pull with authentication (GitHub Token 사용)
-          console.log('📥 Pulling latest changes...');
-          const gitUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}.git`;
+          // 배포 스크립트 실행
+          console.log('� Executing deployment script...');
+          const { stdout, stderr } = await execAsync('/home/ubuntu/myblog/deploy.sh');
           
-          await execAsync('cd /home/ubuntu/myblog && git fetch origin main');
-          await execAsync('cd /home/ubuntu/myblog && git reset --hard origin/main');
-          
-          // 2. Docker 컨테이너 재빌드 및 재시작
-          console.log('🐳 Rebuilding Docker containers...');
-          await execAsync('cd /home/ubuntu/myblog && docker-compose down');
-          await execAsync('cd /home/ubuntu/myblog && docker-compose up --build -d');
-          
-          // 3. 잠시 대기 (컨테이너 시작 대기)
-          await new Promise(resolve => setTimeout(resolve, 10000));
-          
-          // 4. 캐시 무효화
-          console.log('🗑️ Clearing cache...');
-          const revalidateResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/revalidate?secret=${process.env.REVALIDATE_SECRET}`, {
-            method: 'POST',
-          });
-          
-          if (revalidateResponse.ok) {
-            console.log('✅ Cache invalidated successfully');
-          } else {
-            console.log('⚠️ Cache invalidation failed, but deployment succeeded');
+          console.log('✅ Deployment script stdout:', stdout);
+          if (stderr) {
+            console.error('⚠️ Deployment script stderr:', stderr);
           }
+
+          // 캐시 무효화는 deploy.sh가 끝난 후 별도로 호출될 수 있음
+          // 또는 스크립트 내에서 처리 가능
+          console.log('✅ Deployment initiated successfully via script.');
 
           return NextResponse.json({
             success: true,
-            message: 'Deployment completed successfully',
+            message: 'Deployment script executed successfully',
             timestamp: new Date().toISOString(),
-            changes: payload.commits.length
+            details: stdout
           });
 
         } catch (error) {
