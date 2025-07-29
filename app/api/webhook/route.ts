@@ -14,60 +14,57 @@ export async function POST(request: NextRequest) {
 
     // GitHub 웹훅 시크릿 검증
     const secret = process.env.WEBHOOK_SECRET;
-    const skipSignatureCheck = true; // 임시로 항상 스킵 (디버깅용)
     
-    console.log('🔧 Debug: skipSignatureCheck =', skipSignatureCheck);
-    console.log('🔧 Debug: SKIP_SIGNATURE_CHECK env =', process.env.SKIP_SIGNATURE_CHECK);
-    
-    if (!secret && !skipSignatureCheck) {
+    if (!secret) {
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
     }
 
-    // 서명 검증 (스킵 모드가 아닌 경우만)
-    if (!skipSignatureCheck && secret) {
-      const expectedSignature = 'sha256=' + crypto
-        .createHmac('sha256', secret)
-        .update(body, 'utf8')
-        .digest('hex');
+    // 서명 검증
+    const expectedSignature = 'sha256=' + crypto
+      .createHmac('sha256', secret)
+      .update(body, 'utf8')
+      .digest('hex');
 
-      console.log('🔍 Signature verification debug:');
-      console.log('- Received signature:', signature);
-      console.log('- Expected signature:', expectedSignature);
-      console.log('- Body length:', body.length);
-      console.log('- Secret length:', secret.length);
-      console.log('- Raw body (first 200 chars):', body.substring(0, 200));
-      console.log('- Body hash (for comparison):', crypto.createHash('md5').update(body).digest('hex'));
+    console.log('🔍 Signature verification:');
+    console.log('- Received:', signature);
+    console.log('- Expected:', expectedSignature);
 
-      if (signature !== expectedSignature) {
-        console.log('❌ Signature mismatch');
-        return NextResponse.json({ 
-          error: 'Invalid signature',
-          debug: {
-            received: signature,
-            expected: expectedSignature,
-            bodyLength: body.length,
-            bodyPreview: body.substring(0, 200)
-          }
-        }, { status: 401 });
-      }
-
-      console.log('✅ Signature verified successfully');
-    } else {
-      console.log('⚠️ Signature verification skipped (debug mode)');
+    if (signature !== expectedSignature) {
+      console.log('❌ Signature mismatch');
+      return NextResponse.json({ 
+        error: 'Invalid signature',
+        debug: {
+          received: signature,
+          expected: expectedSignature,
+          bodyLength: body.length
+        }
+      }, { status: 401 });
     }
 
+    console.log('✅ Signature verified successfully');
+
     const payload = JSON.parse(body);
+
+    console.log('📦 Received payload:', JSON.stringify(payload, null, 2));
 
     // push 이벤트이고 main 브랜치인 경우만 처리
     if (githubEvent === 'push' && payload.ref === 'refs/heads/main') {
       console.log('🔄 GitHub push detected, starting deployment...');
 
       // content/posts 폴더의 변경사항이 있는지 확인
-      const hasContentChanges = payload.commits.some((commit: any) =>
-        commit.added.some((file: string) => file.startsWith('content/posts/')) ||
-        commit.modified.some((file: string) => file.startsWith('content/posts/')) ||
-        commit.removed.some((file: string) => file.startsWith('content/posts/'))
-      );
+      // payload.commits가 배열인지 먼저 확인
+      const commits = Array.isArray(payload.commits) ? payload.commits : [];
+      console.log('📝 Found commits:', commits.length);
+
+      const hasContentChanges = commits.some((commit: any) => {
+        const added = Array.isArray(commit.added) ? commit.added : [];
+        const modified = Array.isArray(commit.modified) ? commit.modified : [];
+        const removed = Array.isArray(commit.removed) ? commit.removed : [];
+        
+        return [...added, ...modified, ...removed].some((file: string) => 
+          file.startsWith('content/posts/')
+        );
+      });
 
       if (hasContentChanges) {
         console.log('📝 Content changes detected, updating...');
