@@ -1,33 +1,54 @@
 # syntax=docker/dockerfile:1
 
-# 1. 최종 실행 환경 (Production Base)
-FROM node:24-alpine
+# Base Stage: 기본 환경 설정
+FROM node:24-alpine AS base
 WORKDIR /app
 
-# 보안을 위해 non-root 사용자 생성 및 자동 배포 도구 설치
+# Dependencies Stage: 의존성만 설치
+FROM base AS deps
+COPY package*.json ./
+RUN npm ci
+
+# Builder Stage: 소스코드 복사 및 빌드
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# --- [디버깅 1] ---
+# 빌드 직후, standalone 파일들이 실제로 생성되었는지 확인합니다.
+RUN echo "--- Verifying files in builder stage ---" && \
+    ls -la /app/.next/standalone
+
+# Production Stage: 최종 실행 이미지 생성
+FROM base AS runner
+ENV NODE_ENV=production
+
+# 보안을 위한 non-root 사용자 생성 및 배포 도구 설치
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001 && \
     apk add --no-cache git docker-compose
 
-# 2. 의존성 설치
-COPY package*.json ./
-RUN npm ci
+# Standalone 빌드 결과물을 복사합니다.
+# standalone 폴더의 '내용물'을 /app으로 복사합니다.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
 
-# 3. 소스코드 복사 및 빌드
-COPY . .
-RUN npm run build
+# 나머지 필요 에셋들을 복사합니다.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/content ./content
+COPY --from=builder --chown=nextjs:nodejs /app/deploy.sh ./deploy.sh
+RUN chmod +x ./deploy.sh
 
-# 4. 파일 소유권 변경
-# public, .next, content 폴더의 소유권을 nextjs 사용자로 변경
-RUN chown -R nextjs:nodejs /app/public && \
-    chown -R nextjs:nodejs /app/.next && \
-    chown -R nextjs:nodejs /app/content && \
-    chown nextjs:nodejs /app/deploy.sh
+# --- [디버깅 2] ---
+# 파일들이 최종적으로 /app 폴더에 잘 복사되었는지 확인합니다.
+RUN echo "--- Verifying files in runner stage ---" && \
+    ls -la /app
 
-# 5. 사용자 전환
+# non-root 사용자로 전환
 USER nextjs
 
 EXPOSE 3000
 
-# Standalone 빌드의 실행 파일 경로로 CMD 수정
-CMD ["node", ".next/standalone/server.js"]
+# 절대 경로로 실행하여 모호함을 제거합니다.
+CMD ["node", "/app/server.js"]
