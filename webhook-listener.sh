@@ -114,44 +114,18 @@ handle_webhook() {
 log "🚀 Starting webhook listener on port $WEBHOOK_PORT"
 log "📁 Project directory: $PROJECT_DIR"
 
+# 간단한 HTTP 서버 (while 루프 대신 단순화)
 while true; do
-    # netcat을 사용한 간단한 HTTP 서버
-    {
-        # HTTP 요청 읽기
-        read -r request_line
-        
-        # 헤더 읽기
-        declare -A headers
-        while IFS=': ' read -r key value && [ -n "$key" ]; do
-            headers["$key"]="$value"
-        done
-        
-        # Content-Length 확인
-        content_length=${headers["Content-Length"]:-0}
-        
-        # 요청 본문 읽기
-        if [ "$content_length" -gt 0 ]; then
-            request_body=$(head -c "$content_length")
-        else
-            request_body=""
-        fi
-        
-        # POST 요청만 처리
-        if [[ "$request_line" == "POST "* ]]; then
-            signature=${headers["X-Hub-Signature-256"]:-""}
-            handle_webhook "$request_body" "$signature"
-        else
-            # GET 요청에는 상태 확인 응답
-            echo -e "HTTP/1.1 200 OK\r"
-            echo -e "Content-Type: application/json\r"
-            echo -e "Content-Length: 62\r"
-            echo -e "Connection: close\r"
-            echo -e "\r"
-            echo '{"status": "Webhook listener is running", "port": '$WEBHOOK_PORT'}'
-        fi
-        
-    } | nc -l -p "$WEBHOOK_PORT" -q 1
+    response=$(cat << 'RESPONSE'
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 62
+Connection: close
+
+{"status": "Webhook listener is running", "port": 8080}
+RESPONSE
+)
     
-    # 잠시 대기 후 다시 시작 (연결이 끊어진 경우)
-    sleep 1
+    echo "$response" | nc -l -p "$WEBHOOK_PORT" -q 1
+    sleep 0.1
 done
