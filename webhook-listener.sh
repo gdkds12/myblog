@@ -106,7 +106,7 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'{\"error\": \"Git pull failed\"}')
+                self.wfile.write(b'{"error": "Git pull failed"}')
                 
         except Exception as e:
             log(f'Exception occurred: {str(e)}')
