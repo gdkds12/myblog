@@ -17,7 +17,7 @@ draft: false
 >
 > [구독하러 가기\]](https://maily.so/cursormatfia)
 
- 
+  
 
 ![첨부 이미지](https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/1_vibecoding_trend.webp)
 
