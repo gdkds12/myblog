@@ -45,7 +45,8 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        self.wfile.write(b'{\"status\": \"Webhook listener running\", \"port\": ' + str(PORT).encode() + b'}')
+        response = '{"status": "Webhook listener running", "port": ' + str(PORT) + '}'
+        self.wfile.write(response.encode())
         log('GET response sent')
     
     def do_POST(self):
@@ -115,7 +116,8 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(f'{{\"error\": \"{str(e)}\"}}'.encode())
+            error_msg = '{"error": "' + str(e).replace('"', '\\"') + '"}'
+            self.wfile.write(error_msg.encode())
     
     def log_message(self, format, *args):
         log(f'HTTP: {format % args}')
