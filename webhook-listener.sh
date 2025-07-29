@@ -142,14 +142,15 @@ while true; do
             handle_webhook "$request_body" "$signature"
         else
             # GET 요청에는 상태 확인 응답
-            echo "HTTP/1.1 200 OK"
-            echo "Content-Type: application/json"
-            echo "Content-Length: 62"
-            echo ""
+            echo -e "HTTP/1.1 200 OK\r"
+            echo -e "Content-Type: application/json\r"
+            echo -e "Content-Length: 62\r"
+            echo -e "Connection: close\r"
+            echo -e "\r"
             echo '{"status": "Webhook listener is running", "port": '$WEBHOOK_PORT'}'
         fi
         
-    } | nc -l -p "$WEBHOOK_PORT"
+    } | nc -l -p "$WEBHOOK_PORT" -q 1
     
     # 잠시 대기 후 다시 시작 (연결이 끊어진 경우)
     sleep 1
