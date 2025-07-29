@@ -70,21 +70,15 @@ class SimpleWebhookHandler(http.server.BaseHTTPRequestHandler):
             if result.returncode == 0:
                 log('Git pull successful')
                 
-                # 캐시 무효화
-                log('Invalidating cache...')
-                cache_result = subprocess.run([
-                    'curl', '-s', '-X', 'POST',
-                    '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
-                    '-H', 'Content-Type: application/json',
-                    '-d', '{\"paths\": [\"/\", \"/articles\", \"/docs\"]}',
-                    'http://localhost:3000/api/revalidate'
-                ], capture_output=True, text=True, timeout=10)
-                
-                log(f'Cache result: {cache_result.returncode}')
-                if cache_result.stdout:
-                    log(f'Cache stdout: {cache_result.stdout}')
-                if cache_result.stderr:
-                    log(f'Cache stderr: {cache_result.stderr}')
+                # 캐시 무효화 (선택적)
+                log('Skipping cache invalidation for now...')
+                # cache_result = subprocess.run([
+                #     'curl', '-s', '-X', 'POST',
+                #     '-H', f'Authorization: Bearer {REVALIDATE_TOKEN}',
+                #     '-H', 'Content-Type: application/json',
+                #     '-d', '{\"paths\": [\"/\", \"/articles\", \"/docs\"]}',
+                #     'http://localhost:3000/api/revalidate'
+                # ], capture_output=True, text=True, timeout=10)
                 
                 log('Deployment completed')
                 self.send_response(200)
