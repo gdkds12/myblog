@@ -73,13 +73,13 @@ jobs:
           SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET }}" | sed 's/^.* //')
           echo "🔐 Signature generated: sha256=$SIGNATURE"
           
-          # 웹훅 전송 (포트 9000으로 변경)
+          # 웹훅 전송 (포트 8080으로 수정)
           echo "📡 Sending webhook..."
-          RESPONSE=$(curl -s -w "%{http_code}" 
-            -X POST 
-            -H "Content-Type: application/json" 
-            -H "X-Hub-Signature-256: sha256=$SIGNATURE" 
-            -d "$PAYLOAD" 
+          RESPONSE=$(curl -s -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+            -d "$PAYLOAD" \
             "${{ secrets.SERVER_WEBHOOK_URL }}")
           
           # HTTP 상태 코드 추출
