@@ -63,8 +63,8 @@ jobs:
           CHANGED_FILES='${{ steps.changed-files.outputs.all_changed_files }}'
           CHANGED_FILES_JSON=$(echo "$CHANGED_FILES" | tr ' ' '\n' | jq -R . | jq -s .)
           
-          # 웹훅 페이로드 생성 (minified JSON)
-          PAYLOAD=$(jq -n \
+          # 웹훅 페이로드 생성 (minified JSON with -c flag)
+          PAYLOAD=$(jq -nc \
             --arg ref "refs/heads/main" \
             --arg repo_name "${{ github.repository }}" \
             --arg commit_id "${{ github.sha }}" \

@@ -14,35 +14,44 @@ export async function POST(request: NextRequest) {
 
     // GitHub 웹훅 시크릿 검증
     const secret = process.env.WEBHOOK_SECRET;
-    if (!secret) {
+    const skipSignatureCheck = process.env.SKIP_SIGNATURE_CHECK === 'true'; // 임시 디버깅용
+    
+    if (!secret && !skipSignatureCheck) {
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
     }
 
-    // 서명 검증
-    const expectedSignature = 'sha256=' + crypto
-      .createHmac('sha256', secret)
-      .update(body, 'utf8')
-      .digest('hex');
+    // 서명 검증 (스킵 모드가 아닌 경우만)
+    if (!skipSignatureCheck && secret) {
+      const expectedSignature = 'sha256=' + crypto
+        .createHmac('sha256', secret)
+        .update(body, 'utf8')
+        .digest('hex');
 
-    console.log('🔍 Signature verification debug:');
-    console.log('- Received signature:', signature);
-    console.log('- Expected signature:', expectedSignature);
-    console.log('- Body length:', body.length);
-    console.log('- Secret length:', secret.length);
+      console.log('🔍 Signature verification debug:');
+      console.log('- Received signature:', signature);
+      console.log('- Expected signature:', expectedSignature);
+      console.log('- Body length:', body.length);
+      console.log('- Secret length:', secret.length);
+      console.log('- Raw body (first 200 chars):', body.substring(0, 200));
+      console.log('- Body hash (for comparison):', crypto.createHash('md5').update(body).digest('hex'));
 
-    if (signature !== expectedSignature) {
-      console.log('❌ Signature mismatch');
-      return NextResponse.json({ 
-        error: 'Invalid signature',
-        debug: {
-          received: signature,
-          expected: expectedSignature,
-          bodyLength: body.length
-        }
-      }, { status: 401 });
+      if (signature !== expectedSignature) {
+        console.log('❌ Signature mismatch');
+        return NextResponse.json({ 
+          error: 'Invalid signature',
+          debug: {
+            received: signature,
+            expected: expectedSignature,
+            bodyLength: body.length,
+            bodyPreview: body.substring(0, 200)
+          }
+        }, { status: 401 });
+      }
+
+      console.log('✅ Signature verified successfully');
+    } else {
+      console.log('⚠️ Signature verification skipped (debug mode)');
     }
-
-    console.log('✅ Signature verified successfully');
 
     const payload = JSON.parse(body);
 
