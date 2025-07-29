@@ -27,7 +27,8 @@ RUN apk add --no-cache git docker-compose
 
 # Standalone 빌드 결과물 복사
 # --chown 플래그로 파일 소유자를 nextjs 사용자로 지정
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# 소스 경로에 후행 슬래시(/)를 추가하여 디렉토리 내용물만 복사합니다.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/content ./content
@@ -35,6 +36,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/content ./content
 # 배포 스크립트 복사 및 실행 권한 부여
 COPY --from=builder --chown=nextjs:nodejs /app/deploy.sh ./deploy.sh
 RUN chmod +x ./deploy.sh
+
+# 디버깅: 최종 파일 목록 확인
+RUN ls -la /app
 
 # 사용자 전환
 USER nextjs
