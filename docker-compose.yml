@@ -15,8 +15,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # deploy.sh 스크립트 실행용
-
+      - ./content:/app/content # 컨텐츠 파일을 컨테이너와 공유
   caddy:
     image: caddy:latest
     container_name: caddy

@@ -37,38 +37,19 @@ jobs:
           echo "📝 Content files changed:"
           echo "${{ steps.changed-files.outputs.all_changed_files }}"
 
-      - name: Send webhook to server
-        if: steps.changed-files.outputs.any_changed == 'true'
-        env:
-          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
-          SERVER_WEBHOOK_URL: ${{ secrets.SERVER_WEBHOOK_URL }}
+      - name: Send webhook
         run: |
           echo "🔔 Sending webhook to server..."
-          
-          # 환경변수 확인
-          if [ -z "$WEBHOOK_SECRET" ]; then
-            echo "❌ WEBHOOK_SECRET is not set"
-            exit 1
-          fi
-          
-          if [ -z "$SERVER_WEBHOOK_URL" ]; then
-            echo "❌ SERVER_WEBHOOK_URL is not set"
-            exit 1
-          fi
-          
           echo "📝 Environment variables verified"
-          echo "🎯 Target URL: $SERVER_WEBHOOK_URL"
+          echo "🎯 Target URL: ${{ secrets.SERVER_WEBHOOK_URL }}"
           
-          # 변경된 파일 목록을 JSON 배열로 변환
-          CHANGED_FILES='${{ steps.changed-files.outputs.all_changed_files }}'
-          CHANGED_FILES_JSON=$(echo "$CHANGED_FILES" | tr ' ' '\n' | jq -R . | jq -s .)
-          
-          # 웹훅 페이로드 생성 (minified JSON with -c flag)
-          PAYLOAD=$(jq -nc \
-            --arg ref "refs/heads/main" \
-            --arg repo_name "${{ github.repository }}" \
-            --arg commit_id "${{ github.sha }}" \
-            --argjson changed_files "$CHANGED_FILES_JSON" \
+          # 페이로드 생성 (간소화)
+          PAYLOAD=$(jq -nc 
+            --arg ref "refs/heads/main" 
+            --arg repo_name "${{ github.repository }}" 
+            --arg commit_id "${{ github.sha }}" 
+            --arg message "Content update via GitHub Actions" 
+            --argjson changed_files "$(echo '${{ steps.changes.outputs.changed_files }}' | jq -R 'split(",")')" 
             '{
               ref: $ref,
               repository: {
@@ -77,46 +58,43 @@ jobs:
               },
               commits: [{
                 id: $commit_id,
-                message: "Content update via GitHub Actions",
+                message: $message,
                 modified: $changed_files
               }],
               action: "content_update",
               changed_files: $changed_files
-            }')
+            }'
+          )
           
           echo "📦 Payload prepared:"
           echo "$PAYLOAD"
           
-          # HMAC 서명 생성 (Node.js 방식과 동일하게)
-          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | cut -d' ' -f2)
+          # HMAC 서명 생성
+          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET }}" | sed 's/^.* //')
           echo "🔐 Signature generated: sha256=$SIGNATURE"
           
-          # 웹훅 전송
+          # 웹훅 전송 (포트 9000으로 변경)
           echo "📡 Sending webhook..."
-          HTTP_STATUS=$(curl -s -o /tmp/webhook_response.txt -w "%{http_code}" \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
-            -H "X-GitHub-Event: push" \
-            -H "User-Agent: GitHub-Hookshot/manual" \
-            -d "$PAYLOAD" \
-            "$SERVER_WEBHOOK_URL")
+          RESPONSE=$(curl -s -w "%{http_code}" 
+            -X POST 
+            -H "Content-Type: application/json" 
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" 
+            -d "$PAYLOAD" 
+            "${{ secrets.SERVER_WEBHOOK_URL }}")
+          
+          # HTTP 상태 코드 추출
+          HTTP_STATUS="${RESPONSE: -3}"
+          RESPONSE_BODY="${RESPONSE%???}"
           
           echo "📊 HTTP Status: $HTTP_STATUS"
           echo "📄 Response:"
-          cat /tmp/webhook_response.txt || echo "No response body"
+          echo "$RESPONSE_BODY"
           
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "✅ Webhook sent successfully (HTTP $HTTP_STATUS)"
+          # 성공 여부 확인
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Webhook sent successfully"
           else
             echo "❌ Webhook failed (HTTP $HTTP_STATUS)"
-            
-            # 디버깅을 위한 서명 검증 테스트
-            echo "🔍 Debug: Testing signature generation..."
-            echo "Secret length: ${#WEBHOOK_SECRET}"
-            echo "Payload length: ${#PAYLOAD}"
-            echo "Generated signature: $SIGNATURE"
-            
             exit 1
           fi
 
