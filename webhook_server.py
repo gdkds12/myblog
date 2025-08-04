@@ -11,12 +11,18 @@ import signal
 import json
 import hmac
 import hashlib
+import threading
+import time
+import gc
 
 # 환경변수에서 설정값 가져오기
 PORT = int(os.environ.get('WEBHOOK_PORT', '8080'))
 PROJECT_DIR = os.environ.get('PROJECT_DIR', '/home/ubuntu/myblog')
 REVALIDATE_TOKEN = os.environ.get('REVALIDATE_TOKEN', '')
 WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET', '')
+
+# 서버 시작 시간 기록
+start_time = time.time()
 
 print(f'DEBUG: PORT={PORT}')
 print(f'DEBUG: PROJECT_DIR={PROJECT_DIR}')
@@ -28,13 +34,40 @@ def log(message):
     print(f'[{timestamp}] {message}', flush=True)
 
 class ReusableTCPServer(socketserver.TCPServer):
-    """소켓 재사용을 허용하는 TCP 서버"""
+    """소켓 재사용을 허용하는 향상된 TCP 서버"""
     allow_reuse_address = True
+    request_queue_size = 10
+    timeout = 30
     
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
         super().__init__(server_address, RequestHandlerClass, bind_and_activate=bind_and_activate)
+        # 소켓 옵션 설정
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        
+    def server_close(self):
+        """서버 종료 시 소켓 정리"""
+        log('Cleaning up server socket...')
+        super().server_close()
 
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
+    protocol_version = 'HTTP/1.1'  # Keep-alive 지원
+    timeout = 30
+    
+    def setup(self):
+        """연결 설정 시 타임아웃 적용"""
+        super().setup()
+        self.connection.settimeout(self.timeout)
+    
+    def finish(self):
+        """요청 처리 완료 후 정리"""
+        try:
+            super().finish()
+        except Exception as e:
+            log(f'Error in connection cleanup: {e}')
+        finally:
+            # 강제 가비지 컬렉션
+            gc.collect()
     def verify_signature(self, payload, signature):
         """HMAC 서명 검증"""
         if not WEBHOOK_SECRET:
@@ -79,17 +112,27 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
     
     def do_GET(self):
         log(f'GET request received from {self.client_address[0]}')
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        response = {
-            "status": "Webhook listener running",
-            "port": PORT,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "project_dir": PROJECT_DIR
-        }
-        self.wfile.write(json.dumps(response, indent=2).encode())
-        log('GET response sent')
+        try:
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Connection', 'close')  # 연결 즉시 종료
+            self.end_headers()
+            response = {
+                "status": "Webhook listener running",
+                "port": PORT,
+                "timestamp": datetime.datetime.now().isoformat(),
+                "project_dir": PROJECT_DIR,
+                "uptime": time.time() - start_time
+            }
+            self.wfile.write(json.dumps(response, indent=2).encode())
+            log('GET response sent')
+        except Exception as e:
+            log(f'Error in GET handler: {e}')
+        finally:
+            try:
+                self.wfile.close()
+            except:
+                pass
     
     def do_POST(self):
         log(f'POST request received from {self.client_address[0]} - starting deployment')
@@ -210,6 +253,38 @@ def signal_handler(signum, frame):
     log(f'Received signal {signum}, shutting down gracefully...')
     sys.exit(0)
 
+def health_check_thread():
+    """서버 상태를 주기적으로 체크하는 스레드"""
+    while True:
+        try:
+            time.sleep(300)  # 5분마다 체크
+            
+            # 메모리 사용량 체크
+            import psutil
+            process = psutil.Process()
+            memory_mb = process.memory_info().rss / 1024 / 1024
+            
+            log(f'Health check - Memory: {memory_mb:.1f}MB, Uptime: {time.time() - start_time:.0f}s')
+            
+            # 메모리가 100MB 이상이면 경고
+            if memory_mb > 100:
+                log(f'Warning: High memory usage detected: {memory_mb:.1f}MB')
+                gc.collect()  # 강제 가비지 컬렉션
+                
+            # 24시간마다 자동 재시작 (선택사항)
+            uptime_hours = (time.time() - start_time) / 3600
+            if uptime_hours > 24:
+                log('Automatic restart after 24 hours uptime')
+                os.kill(os.getpid(), signal.SIGTERM)
+                
+        except ImportError:
+            # psutil이 없으면 간단한 체크만
+            log(f'Health check - Uptime: {time.time() - start_time:.0f}s')
+            time.sleep(300)
+        except Exception as e:
+            log(f'Health check error: {e}')
+            time.sleep(60)
+
 def main():
     log(f'Enhanced webhook server starting on port {PORT}')
     log(f'Project directory: {PROJECT_DIR}')
@@ -219,13 +294,21 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     
+    # 헬스 체크 스레드 시작
+    health_thread = threading.Thread(target=health_check_thread, daemon=True)
+    health_thread.start()
+    log('Health check thread started')
+    
     try:
         # 소켓 재사용을 허용하는 서버 사용
         with ReusableTCPServer(('', PORT), WebhookHandler) as httpd:
             log('Server created successfully with socket reuse enabled')
             log(f'Server listening on all interfaces, port {PORT}')
             log('Ready to receive webhooks...')
+            
+            # 서버 실행
             httpd.serve_forever()
+            
     except OSError as e:
         if e.errno == 98:  # Address already in use
             log(f'Port {PORT} is already in use')
@@ -241,7 +324,6 @@ def main():
                             log(f'Killing process {pid} using port {PORT}')
                             os.kill(int(pid), signal.SIGTERM)
                     
-                    import time
                     time.sleep(2)  # 프로세스 종료 대기
                     
                     # 다시 시도
@@ -261,6 +343,9 @@ def main():
         import traceback
         log(f'Traceback: {traceback.format_exc()}')
         sys.exit(1)
+    finally:
+        log('Server shutting down, cleaning up...')
+        gc.collect()
 
 if __name__ == '__main__':
     main()
