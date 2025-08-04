@@ -2,15 +2,12 @@
 title: "개발자는 결국 대체될까?"
 slug: "main-category-post"
 excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다. (업데이트됨)"
-feature_image: "https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/1_vibecoding_trend.webp"
-published_at: "2024-01-30T16:00:00.000Z"
+feature_image: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/79986b0b-947b-499d-b3c0-99101a104f4b-1_vibecoding_trend.webp"
+date: "2024-01-30T16:00:00.000Z"
 tags: ["main", "blog", "tech"]
 author: "관리자"
 draft: false
 ---
-
-
-
 
 > 이 글은 [커서맛피아 뉴스레터](https://maily.so/cursormatfia)에서 발행되었습니다.
 >
@@ -18,10 +15,7 @@ draft: false
 >
 > [구독하러 가기\]](https://maily.so/cursormatfia)
 
-  
-
-![첨부 이미지](https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/1_vibecoding_trend.webp)
-
+ ![](https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/79986b0b-947b-499d-b3c0-99101a104f4b-1_vibecoding_trend.webp)
  
 
 바이브코딩, 최근 가장 핫하고 변화도 빠른 분야입니다.
@@ -44,7 +38,7 @@ draft: false
 
 어려운 개발언어 공부할 필요 없이 "계산기 만들어줘"처럼 요청하면 되는거죠.
 
-![출처: 안드레이 카파시 X](https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/Screenshot%202025-07-23%20at%203.31.09%E2%80%AFAM.webp)
+
 
 출처: 안드레이 카파시 X
 
@@ -75,7 +69,6 @@ AI는 우리가 지금껏 사용해온 도구들과 본질적으로 다릅니다
 
  
 
-![첨부 이미지](https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/image.webp)
 
 대표적인 도구인 엑셀은 큰 데이터도 아주 빠르게 처리하고, 오류도 없습니다. 같은 수식을 입력하면 언제나 같은 결과가 나오죠. 사용자가 숙련도만 높이면 원하는 결과를 얻을 수 있습니다. 도구들은 이렇게 **빠르고 정확하다는 점** 에서 인간을 보조해주고 있었습니다.
 
@@ -84,7 +77,5 @@ AI는 우리가 지금껏 사용해온 도구들과 본질적으로 다릅니다
 하지만 AI는 빠르지도 않고, 정확하지도 않습니다. 하나의 요청에 수분이 소요되고, 결과에 오류가 있을 수도 있습니다. 도구로서 활용 가치가 없는거죠.
 
  
-
-![첨부 이미지](https://img.greedient.kr/blog-post/Will%20Developers%20Eventually%20Be%20Replaced%3F/optimized/Screenshot%202025-07-23%20at%2012.41.48%E2%80%AFPM.webp)
 
 많은 분들이 '바이브코딩 툴', 'AI 코딩 툴'을 학습하고 도입하려합니다. 이것이 바로 AI 에이전트를 활용할 때 문제가 생기는 이유입니다. **도구가 아닌데 도구로 사용하려는 접근, 그것 자체가 문제입니다.** 
