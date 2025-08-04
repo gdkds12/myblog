@@ -1,13 +1,12 @@
 ---
 title: "과감한 리더십 필요한 때··· 기업 IT 지형 바꾸는 핵심 트렌드 8선"
-excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
-tags: ["main", "blog", "ai", "test3"]
-featuredImage: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/24f67dbc-4cf6-4e59-a1c7-156d7e7365dd-4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
 slug: "TEST-POST"
-published_at: "2024-01-30T16:00:00.000Z"
+excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
+feature_image: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/24f67dbc-4cf6-4e59-a1c7-156d7e7365dd-4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
+date: "2024-01-30T16:00:00.000Z"
+tags: ["blog", "ai", "test3"]
 author: "관리자"
-feature_image: "https://img.greedient.kr/blog-post/%EA%B3%BC%EA%B0%90%ED%95%9C%20%EB%A6%AC%EB%8D%94%EC%8B%AD%20%ED%95%84%EC%9A%94%ED%95%9C%20%EB%95%8C%C2%B7%C2%B7%C2%B7%20%EA%B8%B0%EC%97%85%20IT%20%EC%A7%80%ED%98%95%20%EB%B0%94%EA%BE%B8%EB%8A%94%20%ED%95%B5%EC%8B%AC%20%ED%8A%B8%EB%A0%8C%EB%93%9C%208%EC%84%A0/4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
-draft: "false"
+draft: false
 ---
 
 ## IT 시장은 어디로 향하고 있을까? AI부터 엣지까지, 최근 IT 서비스, 전략, 도입, 투자 전반에서 나타나는 주요 변화 흐름을 짚어본다.
