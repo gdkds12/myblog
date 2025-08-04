@@ -59,6 +59,18 @@ class ThreadingWebhookServer(socketserver.ThreadingMixIn, ReusableTCPServer):
     """각 요청을 별도 스레드에서 처리하는 멀티스레드 서버"""
     daemon_threads = True  # 메인 스레드 종료 시 자식 스레드도 종료
     max_children = 40      # 최대 동시 스레드 수 제한
+    
+    def handle_error(self, request, client_address):
+        """에러 처리를 조용히 수행"""
+        # ValueError: I/O operation on closed file 같은 정상적인 연결 종료 오류는 무시
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        if isinstance(exc_value, (ValueError, BrokenPipeError, ConnectionResetError)):
+            # 정상적인 연결 종료 상황 - 로그 없이 처리
+            pass
+        else:
+            # 실제 에러인 경우만 로그
+            log(f'Request handling error from {client_address}: {exc_value}')
+            super().handle_error(request, client_address)
 
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.1'  # Keep-alive 지원
@@ -87,6 +99,22 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         finally:
             # 가비지 컬렉션은 스레드별로 수행하지 않음 (성능상 이유)
             pass
+    
+    def handle_one_request(self):
+        """요청 처리를 안전하게 오버라이드"""
+        try:
+            super().handle_one_request()
+        except (ValueError, BrokenPipeError, ConnectionResetError) as e:
+            # 클라이언트가 연결을 조기에 닫은 경우 - 정상적인 상황
+            # 로그를 남기지 않고 조용히 처리
+            pass
+        except Exception as e:
+            log(f'Unexpected error in request handling: {e}')
+    
+    def log_message(self, format, *args):
+        """HTTP 로그 메시지 커스터마이징"""
+        # 기본 HTTP 로그는 우리의 log 함수를 통해 처리
+        log(f'HTTP: {format % args}')
     def verify_signature(self, payload, signature):
         """HMAC 서명 검증"""
         if not WEBHOOK_SECRET:
@@ -266,9 +294,6 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
                 "timestamp": datetime.datetime.now().isoformat()
             }
             self.wfile.write(json.dumps(error_response).encode())
-    
-    def log_message(self, format, *args):
-        log(f'HTTP: {format % args}')
 
 def signal_handler(signum, frame):
     """우아한 종료를 위한 시그널 핸들러"""
