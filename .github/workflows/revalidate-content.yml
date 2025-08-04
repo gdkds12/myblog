@@ -84,9 +84,12 @@ jobs:
           SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET }}" | sed 's/^.* //')
           echo "🔐 Signature generated: sha256=$SIGNATURE"
           
-          # 웹훅 전송 (타임아웃 설정 추가)
+          # 웹훅 전송 (개선된 에러 처리)
           echo "📡 Sending webhook..."
-          RESPONSE=$(curl -s -w "%{http_code}" \
+          
+          # 임시 파일을 사용한 안전한 응답 처리
+          TEMP_RESPONSE=$(mktemp)
+          HTTP_STATUS=$(curl -s -o "$TEMP_RESPONSE" -w "%{http_code}" \
             --connect-timeout 10 \
             --max-time 30 \
             -X POST \
@@ -95,19 +98,27 @@ jobs:
             -d "$PAYLOAD" \
             "${{ secrets.SERVER_WEBHOOK_URL }}")
           
-          # HTTP 상태 코드 추출
-          HTTP_STATUS="${RESPONSE: -3}"
-          RESPONSE_BODY="${RESPONSE%???}"
+          RESPONSE_BODY=$(cat "$TEMP_RESPONSE")
+          rm -f "$TEMP_RESPONSE"
           
           echo "📊 HTTP Status: $HTTP_STATUS"
           echo "📄 Response:"
           echo "$RESPONSE_BODY"
           
-          # 성공 여부 확인
+          # 성공 여부 확인 (HTTP 200과 응답 내용 검증)
           if [ "$HTTP_STATUS" = "200" ]; then
-            echo "✅ Webhook sent successfully"
+            # JSON 응답에서 success 필드 확인
+            if echo "$RESPONSE_BODY" | jq -e '.success' > /dev/null 2>&1; then
+              echo "✅ Webhook sent successfully - Deployment completed"
+            elif echo "$RESPONSE_BODY" | jq -e '.status' > /dev/null 2>&1; then
+              echo "✅ Webhook sent successfully - Server responded"
+            else
+              echo "⚠️ Webhook sent but response format unexpected"
+              echo "$RESPONSE_BODY"
+            fi
           else
             echo "❌ Webhook failed (HTTP $HTTP_STATUS)"
+            echo "Response: $RESPONSE_BODY"
             exit 1
           fi
 
