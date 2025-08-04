@@ -20,14 +20,19 @@ PORT = int(os.environ.get('WEBHOOK_PORT', '8080'))
 PROJECT_DIR = os.environ.get('PROJECT_DIR', '/home/ubuntu/myblog')
 REVALIDATE_TOKEN = os.environ.get('REVALIDATE_TOKEN', '')
 WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET', '')
+DEBUG_MODE = os.environ.get('DEBUG_MODE', 'False').lower() == 'true'
 
 # 서버 시작 시간 기록
 start_time = time.time()
 
 print(f'DEBUG: PORT={PORT}')
 print(f'DEBUG: PROJECT_DIR={PROJECT_DIR}')
-print(f'DEBUG: REVALIDATE_TOKEN={REVALIDATE_TOKEN[:10]}...' if REVALIDATE_TOKEN else 'DEBUG: No REVALIDATE_TOKEN')
-print(f'DEBUG: WEBHOOK_SECRET={WEBHOOK_SECRET[:10]}...' if WEBHOOK_SECRET else 'DEBUG: No WEBHOOK_SECRET')
+if DEBUG_MODE:
+    print(f'DEBUG: REVALIDATE_TOKEN={REVALIDATE_TOKEN[:10]}...' if REVALIDATE_TOKEN else 'DEBUG: No REVALIDATE_TOKEN')
+    print(f'DEBUG: WEBHOOK_SECRET={WEBHOOK_SECRET[:10]}...' if WEBHOOK_SECRET else 'DEBUG: No WEBHOOK_SECRET')
+else:
+    print('DEBUG: REVALIDATE_TOKEN=***' if REVALIDATE_TOKEN else 'DEBUG: No REVALIDATE_TOKEN')
+    print('DEBUG: WEBHOOK_SECRET=***' if WEBHOOK_SECRET else 'DEBUG: No WEBHOOK_SECRET')
 
 def log(message):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -49,6 +54,11 @@ class ReusableTCPServer(socketserver.TCPServer):
         """서버 종료 시 소켓 정리"""
         log('Cleaning up server socket...')
         super().server_close()
+
+class ThreadingWebhookServer(socketserver.ThreadingMixIn, ReusableTCPServer):
+    """각 요청을 별도 스레드에서 처리하는 멀티스레드 서버"""
+    daemon_threads = True  # 메인 스레드 종료 시 자식 스레드도 종료
+    max_children = 40      # 최대 동시 스레드 수 제한
 
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.1'  # Keep-alive 지원
@@ -76,7 +86,8 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         
         log(f'Received signature: {signature}')
         log(f'Payload length: {len(payload)} bytes')
-        log(f'Webhook secret length: {len(WEBHOOK_SECRET)} chars')
+        if DEBUG_MODE:
+            log(f'Webhook secret length: {len(WEBHOOK_SECRET)} chars')
         
         # 페이로드가 문자열인 경우 바이트로 변환
         if isinstance(payload, str):
@@ -102,8 +113,8 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         result = hmac.compare_digest(expected_signature, received_signature)
         log(f'Signature verification: {"PASSED" if result else "FAILED"}')
         
-        # 실패한 경우 추가 디버깅 정보
-        if not result:
+        # 실패한 경우 추가 디버깅 정보 (디버그 모드에서만)
+        if not result and DEBUG_MODE:
             log('Signature verification failed - debugging info:')
             log(f'  Payload (first 100 chars): {payload[:100]}')
             log(f'  Secret (first 10 chars): {WEBHOOK_SECRET[:10]}...')
@@ -260,16 +271,20 @@ def health_check_thread():
             time.sleep(300)  # 5분마다 체크
             
             # 메모리 사용량 체크
-            import psutil
-            process = psutil.Process()
-            memory_mb = process.memory_info().rss / 1024 / 1024
-            
-            log(f'Health check - Memory: {memory_mb:.1f}MB, Uptime: {time.time() - start_time:.0f}s')
-            
-            # 메모리가 100MB 이상이면 경고
-            if memory_mb > 100:
-                log(f'Warning: High memory usage detected: {memory_mb:.1f}MB')
-                gc.collect()  # 강제 가비지 컬렉션
+            try:
+                import psutil
+                process = psutil.Process()
+                memory_mb = process.memory_info().rss / 1024 / 1024
+                
+                log(f'Health check - Memory: {memory_mb:.1f}MB, Uptime: {time.time() - start_time:.0f}s')
+                
+                # 메모리가 100MB 이상이면 경고
+                if memory_mb > 100:
+                    log(f'Warning: High memory usage detected: {memory_mb:.1f}MB')
+                    gc.collect()  # 강제 가비지 컬렉션
+            except ImportError:
+                # psutil이 없으면 간단한 체크만
+                log(f'Health check - Uptime: {time.time() - start_time:.0f}s')
                 
             # 24시간마다 자동 재시작 (선택사항)
             uptime_hours = (time.time() - start_time) / 3600
@@ -277,10 +292,6 @@ def health_check_thread():
                 log('Automatic restart after 24 hours uptime')
                 os.kill(os.getpid(), signal.SIGTERM)
                 
-        except ImportError:
-            # psutil이 없으면 간단한 체크만
-            log(f'Health check - Uptime: {time.time() - start_time:.0f}s')
-            time.sleep(300)
         except Exception as e:
             log(f'Health check error: {e}')
             time.sleep(60)
@@ -299,12 +310,43 @@ def main():
     health_thread.start()
     log('Health check thread started')
     
+    # systemd 알림 기능 (watchdog 처리)
+    systemd_available = False
+    systemd_daemon = None
     try:
-        # 소켓 재사용을 허용하는 서버 사용
-        with ReusableTCPServer(('', PORT), WebhookHandler) as httpd:
-            log('Server created successfully with socket reuse enabled')
+        import systemd.daemon as systemd_daemon
+        systemd_available = True
+        log('systemd integration available')
+    except ImportError:
+        log('systemd integration not available (install python3-systemd if needed)')
+        systemd_daemon = None
+    
+    try:
+        # 멀티스레드 소켓 재사용 서버 사용
+        with ThreadingWebhookServer(('', PORT), WebhookHandler) as httpd:
+            log('Multithreaded server created successfully with socket reuse enabled')
             log(f'Server listening on all interfaces, port {PORT}')
-            log('Ready to receive webhooks...')
+            log('Ready to receive webhooks with concurrent request handling...')
+            
+            # systemd에 준비 완료 알림
+            if systemd_available and systemd_daemon:
+                systemd_daemon.notify('READY=1')
+                log('Notified systemd that service is ready')
+                
+                # watchdog 스레드 시작
+                def watchdog_thread():
+                    while True:
+                        try:
+                            time.sleep(30)  # 30초마다 알림
+                            systemd_daemon.notify('WATCHDOG=1')
+                            log('Sent watchdog keepalive to systemd')
+                        except Exception as e:
+                            log(f'Watchdog error: {e}')
+                            time.sleep(30)  # 에러 시에만 추가 대기
+                
+                watchdog = threading.Thread(target=watchdog_thread, daemon=True)
+                watchdog.start()
+                log('Watchdog thread started')
             
             # 서버 실행
             httpd.serve_forever()
@@ -312,32 +354,12 @@ def main():
     except OSError as e:
         if e.errno == 98:  # Address already in use
             log(f'Port {PORT} is already in use')
-            log('Attempting to find and kill existing process...')
-            try:
-                # 포트를 사용하는 프로세스 찾기
-                lsof_result = subprocess.run(['lsof', '-ti', f':{PORT}'], 
-                                           capture_output=True, text=True)
-                if lsof_result.stdout:
-                    pids = lsof_result.stdout.strip().split('\n')
-                    for pid in pids:
-                        if pid and pid.isdigit():
-                            log(f'Killing process {pid} using port {PORT}')
-                            os.kill(int(pid), signal.SIGTERM)
-                    
-                    time.sleep(2)  # 프로세스 종료 대기
-                    
-                    # 다시 시도
-                    with ReusableTCPServer(('', PORT), WebhookHandler) as httpd:
-                        log('Server restarted successfully after cleanup')
-                        httpd.serve_forever()
-                else:
-                    log(f'No process found using port {PORT}, but still getting bind error')
-                    raise e
-            except Exception as cleanup_error:
-                log(f'Failed to cleanup and restart: {cleanup_error}')
-                raise e
+            log('This usually indicates another instance is running')
+            log('systemd will handle cleanup and restart - exiting gracefully')
+            sys.exit(1)
         else:
-            raise e
+            log(f'Socket error occurred: {e}')
+            sys.exit(1)
     except Exception as e:
         log(f'Server failed to start: {e}')
         import traceback
@@ -345,6 +367,15 @@ def main():
         sys.exit(1)
     finally:
         log('Server shutting down, cleaning up...')
+        
+        # systemd에 종료 알림
+        if systemd_available and systemd_daemon:
+            try:
+                systemd_daemon.notify('STOPPING=1')
+                log('Notified systemd that service is stopping')
+            except:
+                pass
+        
         gc.collect()
 
 if __name__ == '__main__':
