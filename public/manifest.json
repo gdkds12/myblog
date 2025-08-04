@@ -1,0 +1,27 @@
+{
+  "name": "Greedient - 기술 트렌드와 인사이트",
+  "short_name": "Greedient",
+  "description": "최신 기술 트렌드, AI, 개발, 비즈니스 인사이트를 제공하는 블로그",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "lang": "ko-KR",
+  "scope": "/",
+  "categories": ["technology", "blog", "education"],
+  "icons": [
+    {
+      "src": "/logo.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

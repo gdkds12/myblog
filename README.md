@@ -1,4 +1,44 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Greedient 블로그
+
+기술 트렌드와 인사이트를 제공하는 Next.js 14 기반 블로그입니다.
+
+## 주요 기능
+
+- 📱 모바일 최적화된 반응형 디자인
+- 🌙 다크/라이트 모드 지원
+- 🚀 ISR(Incremental Static Regeneration)을 통한 성능 최적화
+- 📝 마크다운 기반 콘텐츠 관리
+- 🔄 GitHub Actions를 통한 자동 배포
+- 📊 Google Analytics 4 통합
+- 🔍 Google Search Console 최적화
+- 📡 RSS 피드 지원
+- 🏷️ 태그 및 카테고리 시스템
+
+## SEO 최적화
+
+### Google Search Console 설정
+
+1. [Google Search Console](https://search.google.com/search-console)에 접속
+2. 속성 추가 → URL 접두사로 `https://greedient.kr` 입력
+3. HTML 파일 다운로드 방법 선택 후 파일명을 확인
+4. `/app/googleXXXXXXXX.html/route.ts` 파일의 파일명을 실제 검증 파일명으로 수정
+5. `.env.local`의 `GOOGLE_SITE_VERIFICATION` 값을 실제 검증 코드로 수정
+
+### Google Analytics 설정
+
+1. [Google Analytics](https://analytics.google.com)에서 GA4 속성 생성
+2. 측정 ID(G-XXXXXXXXXX) 복사
+3. `.env.local`의 `NEXT_PUBLIC_GA_ID` 값을 실제 측정 ID로 수정
+
+### 환경 변수 설정
+
+```bash
+# Google Analytics ID (GA4)
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+
+# Google Search Console 소유권 확인
+GOOGLE_SITE_VERIFICATION=your-google-verification-code
+```
 
 ## Getting Started
 

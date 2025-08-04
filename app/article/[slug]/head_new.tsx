@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.date ? new Date(post.date).toISOString() : undefined,
       modifiedTime: post.updated_at ? new Date(post.updated_at).toISOString() : undefined,
       authors: [post.author || '관리자'],
-      tags: post.tags?.map(tag => typeof tag === 'string' ? tag : tag.name).filter((tag): tag is string => Boolean(tag)),
+      tags: post.tags?.map(tag => typeof tag === 'string' ? tag : tag.name).filter(Boolean),
     },
     twitter: {
       card: 'summary_large_image',
