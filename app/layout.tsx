@@ -4,7 +4,6 @@ import { Noto_Sans_KR } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import PageTransition from './components/PageTransition';
 import Header from './components/Header';
-import GoogleAnalytics from './components/GoogleAnalytics';
 import GoogleTagManager from './components/GoogleTagManager';
 import type { Metadata } from 'next';
 
@@ -119,7 +118,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-white dark:bg-darkBg text-gray-900 dark:text-darkText min-h-full">
         <GoogleTagManager />
-        <GoogleAnalytics />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Header />
           <div className="w-full px-0 sm:px-6 lg:px-8 pt-[80px]">
