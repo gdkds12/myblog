@@ -10,17 +10,6 @@ feature_image: "https://img.greedient.kr/blog-post/%EA%B3%BC%EA%B0%90%ED%95%9C%2
 draft: "false"
 ---
 
----
-title: "과감한 리더십 필요한 때··· 기업 IT 지형 바꾸는 핵심 트렌드 8선"
-slug: "TEST-POST"
-excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
-feature_image: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/24f67dbc-4cf6-4e59-a1c7-156d7e7365dd-4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
-published_at: "2025-08-04T08:19:42.219Z"
-tags: ["main", "blog", "ai", "test3"]
-author: "관리자"
-draft: false
----
-
 ## IT 시장은 어디로 향하고 있을까? AI부터 엣지까지, 최근 IT 서비스, 전략, 도입, 투자 전반에서 나타나는 주요 변화 흐름을 짚어본다.
 IT 시장은 끊임없이 변하고 있다. 과거에 인기 있던 기술과 관행들이 점차 사라지고 새로운 트렌드가 등장한다. 이런 흐름 속에서 CIO는 최신 동향을 파악하고, 새롭게 뜨는 트렌드 중 무엇이 기업에 도움이 될지, 어떤 요소가 위협이 될지를 신중히 가려내야 한다.
 
