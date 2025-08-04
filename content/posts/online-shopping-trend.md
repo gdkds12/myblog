@@ -2,12 +2,13 @@
 title: "2025 온라인 쇼핑 트렌드"
 slug: "2025onlinetrend"
 excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다. (서명 우회 테스트)"
-feature_image: "https://img.greedient.kr/blog-post/2025%20online%20shopping%20trend/opensurvey_trend_online_shopping_2025-10.png.webp"
-published_at: "2024-01-30T16:00:00.000Z"
+feature_image: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/2c76560b-2f18-4a1b-af5c-333e4fc4f119-Screenshot%25202025-07-23%2520at%252012.41.48%25E2%2580%25AFPM.webp"
+date: "2024-01-30T16:00:00.000Z"
 tags: ["main", "blog", "tech"]
 author: "관리자"
 draft: false
 ---
+
 
 
 > 올해도 온라인 쇼핑 시장에서는 쿠팡과 네이버쇼핑의 강세가 여전합니다. 이러한 가운데 지난해에는 알리와 테무 같은 중국 플랫폼의 인기가 눈에 띄었다면, 올해는 토스쇼핑의 성장에도 주목할 만합니다. 한편 브랜드 **자사몰**은 제품 카테고리별로 서로 다른 이유로 소비자의 선택을 받고 있습니다. 오픈서베이 <온라인 쇼핑 트렌드 리포트 2025>를 바탕으로, 이러한 트렌드를 보다 자세히 살펴보겠습니다.
@@ -18,7 +19,7 @@ draft: false
 
 2025년 소비자들은 온라인에서 조금이라도 더 저렴하게 쇼핑하기 위해 다양한 노력을 하고 있습니다. 최저가를 찾아 여러 쇼핑몰을 비교 검색하는 것은 물론, 중고 제품을 알아본다는 응답도 다수 확인됩니다. 이벤트나 시즌 프로모션 등 할인 시기를 기다리며 구매를 늦추기도 하고, 적립금을 받을 목적으로 후기를 쓰는 등 보다 적극적인 행동을 취하기도 합니다. 
 
-![온라인 쇼핑 트렌드, 트렌드 리포트, 쿠팡, 토스쇼핑, 네이버쇼핑](https://img.greedient.kr/blog-post/2025%20online%20shopping%20trend/opensurvey_trend_online_shopping_2025-10.png.webp)오픈서베이 온라인 쇼핑 트렌드 리포트 2025(p. 10)
+
 
 ## 쿠팡·네이버쇼핑 양강 구도와 토스쇼핑의 부상
 
@@ -26,8 +27,9 @@ draft: false
 
 - [쿠팡으로 집중되는 온라인 장보기, 2025년 트렌드 한눈에 보기](https://blog.opensurvey.co.kr/article/online-grocery-2025-2/)
 
-![온라인 쇼핑 트렌드, 트렌드 리포트, 쿠팡, 토스쇼핑, 네이버쇼핑](https://img.greedient.kr/blog-post/2025%20online%20shopping%20trend/opensurvey_trend_online_shopping_2025-11.png.webp)오픈서베이 온라인 쇼핑 트렌드 리포트 2025(p. 11)
+![](https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/2c76560b-2f18-4a1b-af5c-333e4fc4f119-Screenshot%25202025-07-23%2520at%252012.41.48%25E2%2580%25AFPM.webp)
+
 
 올해 조사에서는 2023년 출시된 **토스쇼핑**도 주목할 만합니다. 10명 중 약 4명이 토스쇼핑을 알고 있고(42.0%), 약 3명이 한 번 정도는 이용해 보았습니다(27.1%). 토스쇼핑은 사용자가 토스 앱을 둘러보다가 자연스럽게 발견하면서 알게 되는 경우가 가장 많습니다. 한편 20~30대 여성 사용자는 ‘고양이 키우기’와 같은 토스 앱 내 이벤트도 토스쇼핑을 인지하는 주요한 계기로 꼽습니다. 토스쇼핑에서 처음 제품을 구매하는 데는 ‘저렴한 가격’과 ‘특가 프로모션’이 가장 큰 영향을 미치는 것으로 확인됩니다.
 
-![온라인 쇼핑 트렌드, 트렌드 리포트, 쿠팡, 토스쇼핑, 네이버쇼핑](https://img.greedient.kr/blog-post/2025%20online%20shopping%20trend/opensurvey_trend_online_shopping_2025-13.png.webp)
+
