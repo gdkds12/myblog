@@ -1,7 +1,7 @@
 ---
 title: "과감한 리더십 필요한 때··· 기업 IT 지형 바꾸는 핵심 트렌드 8선"
 excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
-tags: ["main", "blog", "ai"]
+tags: ["main", "blog", "ai", "test3"]
 featuredImage: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/24f67dbc-4cf6-4e59-a1c7-156d7e7365dd-4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
 slug: "TEST-POST"
 published_at: "2024-01-30T16:00:00.000Z"
