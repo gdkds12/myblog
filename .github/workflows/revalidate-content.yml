@@ -84,41 +84,58 @@ jobs:
           SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET }}" | sed 's/^.* //')
           echo "🔐 Signature generated: sha256=$SIGNATURE"
           
-          # 웹훅 전송 (개선된 에러 처리)
+          # 웹훅 전송 (재시도 로직 포함)
           echo "📡 Sending webhook..."
           
-          # 임시 파일을 사용한 안전한 응답 처리
-          TEMP_RESPONSE=$(mktemp)
-          HTTP_STATUS=$(curl -s -o "$TEMP_RESPONSE" -w "%{http_code}" \
-            --connect-timeout 10 \
-            --max-time 30 \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
-            -d "$PAYLOAD" \
-            "${{ secrets.SERVER_WEBHOOK_URL }}")
+          # 재시도 설정
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SUCCESS=false
           
-          RESPONSE_BODY=$(cat "$TEMP_RESPONSE")
-          rm -f "$TEMP_RESPONSE"
-          
-          echo "📊 HTTP Status: $HTTP_STATUS"
-          echo "📄 Response:"
-          echo "$RESPONSE_BODY"
-          
-          # 성공 여부 확인 (HTTP 200과 응답 내용 검증)
-          if [ "$HTTP_STATUS" = "200" ]; then
-            # JSON 응답에서 success 필드 확인
-            if echo "$RESPONSE_BODY" | jq -e '.success' > /dev/null 2>&1; then
-              echo "✅ Webhook sent successfully - Deployment completed"
-            elif echo "$RESPONSE_BODY" | jq -e '.status' > /dev/null 2>&1; then
-              echo "✅ Webhook sent successfully - Server responded"
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SUCCESS" = false ]; do
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "🔄 Attempt $RETRY_COUNT of $MAX_RETRIES..."
+            
+            # 임시 파일을 사용한 안전한 응답 처리
+            TEMP_RESPONSE=$(mktemp)
+            CURL_EXIT_CODE=0
+            
+            HTTP_STATUS=$(curl -s -o "$TEMP_RESPONSE" -w "%{http_code}" \
+              --connect-timeout 15 \
+              --max-time 45 \
+              --retry 0 \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+              -d "$PAYLOAD" \
+              "${{ secrets.SERVER_WEBHOOK_URL }}") || CURL_EXIT_CODE=$?
+            
+            RESPONSE_BODY=$(cat "$TEMP_RESPONSE" 2>/dev/null || echo "")
+            rm -f "$TEMP_RESPONSE"
+            
+            echo "📊 HTTP Status: $HTTP_STATUS (curl exit: $CURL_EXIT_CODE)"
+            
+            if [ $CURL_EXIT_CODE -eq 0 ] && [ "$HTTP_STATUS" = "200" ]; then
+              SUCCESS=true
+              echo "✅ Webhook sent successfully!"
+              echo "📄 Response: $RESPONSE_BODY"
+              break
             else
-              echo "⚠️ Webhook sent but response format unexpected"
-              echo "$RESPONSE_BODY"
+              echo "⚠️ Attempt $RETRY_COUNT failed"
+              echo "📄 Response: $RESPONSE_BODY"
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                WAIT_TIME=$((RETRY_COUNT * 5))
+                echo "⏳ Waiting ${WAIT_TIME}s before retry..."
+                sleep $WAIT_TIME
+              fi
             fi
-          else
-            echo "❌ Webhook failed (HTTP $HTTP_STATUS)"
-            echo "Response: $RESPONSE_BODY"
+          done
+          
+          # 최종 결과 확인
+          if [ "$SUCCESS" = false ]; then
+            echo "❌ All webhook attempts failed after $MAX_RETRIES tries"
+            echo "Last HTTP Status: $HTTP_STATUS"
+            echo "Last curl exit code: $CURL_EXIT_CODE"
             exit 1
           fi
 
