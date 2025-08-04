@@ -15,8 +15,8 @@ title: "과감한 리더십 필요한 때··· 기업 IT 지형 바꾸는 핵�
 slug: "TEST-POST"
 excerpt: "이 포스트는 메인 카테고리에 표시될 포스트입니다."
 feature_image: "https://img.greedient.kr/posts/23e611a8-ec22-42ed-8e89-09f9f259043a/24f67dbc-4cf6-4e59-a1c7-156d7e7365dd-4013705-0-72783100-1751003979-enterprise-it-market-trends-shutterstock_2645291109.jpg.webp"
-published_at: "2025-08-04T02:58:52.922Z"
-tags: ["main", "blog", "ai"]
+published_at: "2025-08-04T08:19:42.219Z"
+tags: ["main", "blog", "ai", "test3"]
 author: "관리자"
 draft: false
 ---
