@@ -72,12 +72,21 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
     def finish(self):
         """요청 처리 완료 후 정리"""
         try:
+            # 연결이 아직 열려있는지 확인 후 정리
+            if hasattr(self, 'wfile') and not self.wfile.closed:
+                try:
+                    self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError, ValueError):
+                    pass  # 클라이언트가 이미 연결을 닫은 경우 무시
             super().finish()
+        except (BrokenPipeError, ConnectionResetError, ValueError, OSError) as e:
+            # 연결 관련 오류는 정상적인 상황이므로 로그 레벨을 낮춤
+            pass
         except Exception as e:
-            log(f'Error in connection cleanup: {e}')
+            log(f'Unexpected error in connection cleanup: {e}')
         finally:
-            # 강제 가비지 컬렉션
-            gc.collect()
+            # 가비지 컬렉션은 스레드별로 수행하지 않음 (성능상 이유)
+            pass
     def verify_signature(self, payload, signature):
         """HMAC 서명 검증"""
         if not WEBHOOK_SECRET:
@@ -136,14 +145,16 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
                 "uptime": time.time() - start_time
             }
             self.wfile.write(json.dumps(response, indent=2).encode())
+            self.wfile.flush()  # 명시적으로 flush
             log('GET response sent')
+        except (BrokenPipeError, ConnectionResetError, ValueError) as e:
+            # 클라이언트가 연결을 일찍 닫은 경우 - 정상적인 상황
+            pass
         except Exception as e:
             log(f'Error in GET handler: {e}')
         finally:
-            try:
-                self.wfile.close()
-            except:
-                pass
+            # wfile 정리는 finish()에서 처리
+            pass
     
     def do_POST(self):
         log(f'POST request received from {self.client_address[0]} - starting deployment')
