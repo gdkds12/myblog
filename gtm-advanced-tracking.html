@@ -1,0 +1,67 @@
+// GTM 커스텀 HTML 태그용 JavaScript
+// 고급 이벤트 추적을 위한 코드
+
+<script>
+// 블로그 특화 이벤트 추적
+(function() {
+  // 글 읽기 시간 추적
+  let startTime = Date.now();
+  let hasScrolled = false;
+  
+  window.addEventListener('beforeunload', function() {
+    if (hasScrolled) {
+      let readTime = Math.round((Date.now() - startTime) / 1000);
+      dataLayer.push({
+        'event': 'read_time',
+        'reading_time_seconds': readTime,
+        'article_title': document.title
+      });
+    }
+  });
+  
+  // 스크롤 시작 감지
+  window.addEventListener('scroll', function() {
+    if (!hasScrolled && window.scrollY > 100) {
+      hasScrolled = true;
+      dataLayer.push({
+        'event': 'reading_start',
+        'article_title': document.title
+      });
+    }
+  }, { once: true });
+  
+  // 외부 링크 클릭 추적
+  document.addEventListener('click', function(e) {
+    let link = e.target.closest('a');
+    if (link && link.hostname !== window.location.hostname) {
+      dataLayer.push({
+        'event': 'external_link_click',
+        'link_url': link.href,
+        'link_text': link.innerText.trim()
+      });
+    }
+  });
+  
+  // 이미지 클릭 추적
+  document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'IMG') {
+      dataLayer.push({
+        'event': 'image_click',
+        'image_src': e.target.src,
+        'image_alt': e.target.alt
+      });
+    }
+  });
+  
+  // 코드 블록 복사 추적 (코드 블록이 있는 경우)
+  document.addEventListener('copy', function(e) {
+    let selection = window.getSelection().toString();
+    if (selection.length > 50) {
+      dataLayer.push({
+        'event': 'code_copy',
+        'copied_text_length': selection.length
+      });
+    }
+  });
+})();
+</script>
